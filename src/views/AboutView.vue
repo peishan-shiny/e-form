@@ -5,14 +5,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+// import { reactive, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { userStore } from '@/stores/userStore';
 import { useRoute } from "vue-router"
 
 //設定 路由query的方法
 const data = useRoute();
-data.query.Empid = "222010" 
+data.query.Empid = "222010"
 
 const { query } = useRoute();
 console.log(query)
