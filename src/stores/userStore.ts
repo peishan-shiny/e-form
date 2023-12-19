@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import baseAPI from '@/apis/baseAPI.js'
+import {searchPerson} from '@/apis/baseAPI.js'
 
 export const userStore = defineStore('userStore', {
 	state: () => ({
@@ -8,8 +8,8 @@ export const userStore = defineStore('userStore', {
 	actions: {
 		// 向後端拿取人員資料
 		async getUserData(data: GetUserInfo) {
-			await baseAPI.searchPerson(data).then((response: ResUserInfo) => {
-				this.userData = response.data[0];
+			await searchPerson(data).then((response: UserInfo[]) => {
+				this.userData = response[0];
 				console.log("store使用者資料", this.userData)
 			})
 

@@ -5,7 +5,7 @@ interface GetUserInfo {
   Company: string //公司
 }
 
-// 人員資料  資料型別定義
+// 取人員資料 後端回應的 資料型別定義
 interface UserInfo {
   DeptId: string,
   DeptName: string,
@@ -23,11 +23,6 @@ interface UserInfo {
   type: string
 }
 
-// 取人員資料 後端回應的 資料型別定義
-interface ResUserInfo {
-  data: UserInfo[]
-}
-
 // 取部門資料 給後端的 資料型別定義
 interface GetBranchsInfo {
   DeptId: string, //部門代號
@@ -35,10 +30,6 @@ interface GetBranchsInfo {
 }
 
 // 取部門資料 後端回應的 資料型別定義
-interface ResBranchsInfo {
-  data: BranchsInfo[]
-}
-
 interface BranchsInfo {
   DeptId: string,
   DeptName: string,

@@ -54,12 +54,12 @@
               </el-select>
             </div>
           </el-col>
-          <!-- <el-col :xs="24" :sm="24" :md="6">
-            <button class="search-btn btn-black" @click="searchFormList">
+          <el-col :xs="24" :sm="24" :md="6">
+            <!-- <button class="search-btn btn-black" @click="searchFormList">
               <img src="@/assets/white/電子表單icon_搜尋.png" alt="" class="icon" />
               查詢表單
-            </button>
-          </el-col> -->
+            </button> -->
+          </el-col>
         </div>
       </div>
       <!-- 搜尋list -->
@@ -135,6 +135,8 @@ userStoreConfig.getUserData({
   DeptId: "", //部門代號
   EmpId: userId, //工號
   Company: "" //公司
+}).catch((error)=>{
+  console.log(error)
 })
 
 // const { userData } = storeToRefs(userStoreConfig);

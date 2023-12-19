@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import baseAPI from '@/apis/baseAPI.js';
+import {searchPerson,getBranch} from '@/apis/baseAPI.js';
 
 export const baseStore = defineStore('baseStore', {
   state: () => ({
@@ -16,8 +16,8 @@ export const baseStore = defineStore('baseStore', {
   actions: {
     // 向後端拿取部門資料
     async getBranchData(data: GetBranchsInfo) {
-      await baseAPI.getBranch(data).then((response: ResBranchsInfo) => {
-        this.baseData.branchs = response.data;
+      await getBranch(data).then((response: BranchsInfo[]) => {
+        this.baseData.branchs = response;
         console.log("store部門資料", this.baseData.branchs)
       })
     },
@@ -26,8 +26,8 @@ export const baseStore = defineStore('baseStore', {
     // },
     // 取同部門全部人員資料
     async getPersonData(data: GetUserInfo) {
-      await baseAPI.searchPerson(data).then((response: ResUserInfo) => {
-        return response.data;
+      await searchPerson(data).then((response: UserInfo[]) => {
+        return response;
         // this.baseData.persons = response.data;
         // console.log("store同部門全部人員資料", this.baseData.persons)
       })
