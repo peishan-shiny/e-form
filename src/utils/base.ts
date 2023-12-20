@@ -1,10 +1,22 @@
-import {searchPerson} from '@/apis/baseAPI.js';
+import Swal from 'sweetalert2'
 
-// 取同部門全部人員資料
-export async function getPersonData(data: GetUserInfo) {
-  const temp = await searchPerson(data).then((response: UserInfo[]) => {
-    console.log("有呼叫", response)
-    return response;
+// api回應有error
+export function resError(data: any) {
+  // 跳出成功視窗
+  Swal.fire({
+    icon: "error",
+    title: "資料回應錯誤，請聯絡IT人員！",
+    text: data,
+    confirmButtonColor: "#333",
+    confirmButtonText: "確認",
   })
-  return temp
 }
+
+// null或undefined 提示
+export const Toast = Swal.mixin({
+  toast: true,
+  position: 'center',
+  showConfirmButton: false,
+  timer: 2500
+})
+

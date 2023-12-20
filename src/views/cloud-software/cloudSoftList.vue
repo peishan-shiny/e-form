@@ -4,12 +4,12 @@
     <p class="title">軟體申請單</p>
     <div class="list-form">
       <!-- 按鈕 -->
-      <router-link class="action" to="/cloudSoft/create">
+      <RouterLink class="action" to="/cloudSoft/create">
         <div class="top-btn">
           <img src="@/assets/white/電子表單icon_建立表單.png" alt="" class="icon" />
           建立表單
         </div>
-      </router-link>
+      </RouterLink>
 
       <!-- 搜尋 -->
       <div class="block-search">
@@ -29,53 +29,49 @@
         </div>
         <div class="search-row">
           <el-col :xs="24" :sm="24" :md="12">
-              <!-- 建立人員 -->
-              <div class="search-area">
-                <div class="search-title">申請人員</div>
-                <el-select v-model="dataState.branchValue" @change="changePersons(dataState.branchValue)" placeholder="部門"
-                  no-data-text="無數據" clearable>
-                  <el-option v-for="item in baseData.branchs" :key="item.DeptId" :value="item.DeptId"
-                    :label="item.DeptName">
-                  </el-option>
-                </el-select>
-                <el-select v-model="dataState.personValue" class="ml-1 mr-3" placeholder="人員" no-data-text="請先選部門" clearable>
-                  <el-option v-for="item in dataState.personOptions" :key="item.EmpId" :value="item.EmpId"
-                    :label="item.EmpName">
-                  </el-option>
-                </el-select>
-              </div>
-            </el-col>
-          <el-col :xs="24" :sm="24" :md="6">
+            <!-- 建立人員 -->
             <div class="search-area">
-              <div class="search-title">表單狀態</div>
-              <el-select v-model="dataState.statusValue" placeholder="不拘" clearable>
-                <el-option v-for="item in dataState.statusOptions" :label="item.label" :key="item.value" :value="item.value">
+              <div class="search-title">申請人員</div>
+              <el-select v-model="dataState.branchValue" @change="changePersons(dataState.branchValue)" placeholder="部門"
+                no-data-text="無數據" clearable>
+                <el-option v-for="item in baseData.branchs" :key="item.DeptId" :value="item.DeptId"
+                  :label="item.DeptName">
+                </el-option>
+              </el-select>
+              <el-select v-model="dataState.personValue" class="ml-1 mr-3" placeholder="人員" no-data-text="請先選部門"
+                clearable>
+                <el-option v-for="item in dataState.personOptions" :key="item.EmpId" :value="item.EmpId"
+                  :label="item.EmpName">
                 </el-option>
               </el-select>
             </div>
           </el-col>
           <el-col :xs="24" :sm="24" :md="6">
-            <!-- <button class="search-btn btn-black" @click="searchFormList">
+            <div class="search-area">
+              <div class="search-title">表單狀態</div>
+              <el-select v-model="dataState.statusValue" placeholder="不拘" clearable>
+                <el-option v-for="item in dataState.statusOptions" :label="item.label" :key="item.value"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+            </div>
+          </el-col>
+          <el-col :xs="24" :sm="24" :md="6">
+            <button class="search-btn btn-black" @click="searchFormList">
               <img src="@/assets/white/電子表單icon_搜尋.png" alt="" class="icon" />
               查詢表單
-            </button> -->
+            </button>
           </el-col>
         </div>
       </div>
       <!-- 搜尋list -->
-      <!-- <el-table border max-height="500" empty-text="暫無數據" style="width: 100%" :data="dataState.searchResult"
+      <el-table border max-height="500" empty-text="暫無數據" style="width: 100%" :data="dataState.searchResult"
         :header-cell-style="{ color: 'white' }" :header-row-class-name="headerStyleClass" @row-click="clickRow"
         :default-sort="{ prop: 'number', order: 'descending' }">
         <el-table-column type="index" label="項次" width="80" sortable></el-table-column>
-        <el-table-column prop="date" label="建立日期" width="100">
+        <el-table-column prop="CreateDate" label="建立日期" width="100">
         </el-table-column>
         <el-table-column :prop="dataState.formAllData.id" label="表單單號" min-width="130" sortable>
-        </el-table-column>
-        <el-table-column prop="CustName" label="客戶名稱" min-width="150">
-        </el-table-column>
-        <el-table-column prop="ProName" label="專案名稱" min-width="150">
-        </el-table-column>
-        <el-table-column prop="ProCode" label="專案代號" min-width="150">
         </el-table-column>
         <el-table-column prop="EmpName" label="建檔人員" min-width="100">
         </el-table-column>
@@ -83,65 +79,40 @@
         </el-table-column>
         <el-table-column prop="NextSIGNER" label="待簽人員" min-width="150">
         </el-table-column>
-      </el-table> -->
+      </el-table>
     </div>
   </div>
 </template>
 
-<script setup lang="ts" name="FeasibilityList">
+<script setup lang="ts">
+import { defineAsyncComponent, onMounted, ref, watch, } from 'vue';
+import { useRoute, useRouter, RouterLink } from "vue-router"
+import { storeToRefs } from 'pinia';
+import { resError, Toast } from '@/utils/base';
+import { GetEmpGroup } from '@/apis/baseAPI.js'
+import { GetEGAList } from '@/apis/getListAPI.js'
+// 引入baseStore
+import { baseStore } from '@/stores/baseStore';
+// 引入userStore
+import { userStore } from '@/stores/userStore';
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
-import getListAPI from "@/apis/getListAPI.js";
-// import baseAPI from "@/apis/baseAPI";
-// import { Toast } from "@/utils/helper.js";
-import { defineAsyncComponent, onMounted, reactive, computed, watch } from 'vue';
-import { useRoute } from "vue-router"
-import { storeToRefs } from 'pinia';
 
-import { getPersonData } from '@/utils/base';
-
+const router = useRouter();
 const url = location.href;
 console.log("網址", url);
 
 // TODO:本地測試用 => 設定 路由query的方法，上線要註解
-const data = useRoute();
-data.query.Empid = "222010"
-const userId = data.query.Empid
+const route = useRoute();
+route.query.Empid = "222010"
+const userId = route.query.Empid
 
 // TODO:上線用 => 設定 路由query的方法，上線要打開
 // const { query } = useRoute();
 // console.log(query)
 // const userId = query.Empid
 
-
-// 取部門資料
-import { baseStore } from '@/stores/baseStore';
-
-const baseStoreConfig = baseStore();
-baseStoreConfig.getBranchData({
-  DeptId: "", //部門代號
-  DeptName: "" //部門名稱
-})
-
-const { baseData } = storeToRefs(baseStoreConfig);
-
-
-
-// 取使用者資料
-import { userStore } from '@/stores/userStore';
-
-const userStoreConfig = userStore();
-userStoreConfig.getUserData({
-  DeptId: "", //部門代號
-  EmpId: userId, //工號
-  Company: "" //公司
-}).catch((error)=>{
-  console.log(error)
-})
-
-// const { userData } = storeToRefs(userStoreConfig);
-
-const dataState = reactive({
+const dataState = ref({
   // 送出表單的等待畫面
   isLoading: false,
   // 計數api有幾個在執行
@@ -151,7 +122,7 @@ const dataState = reactive({
   // 接api拿部門資料
   branchValue: "",
   // 接api拿部門人員資料
-  personOptions: [] as UserInfo[] | any,
+  personOptions: [] as ResUserInfo[] | any,
   personValue: "",
   // 下拉式 表單狀態
   statusOptions: [
@@ -173,222 +144,173 @@ const dataState = reactive({
     },
   ],
   statusValue: "",
-  // 專案代號
-  projectNumber: "",
-  searchResult: [],
+  searchResult: [] as ResEGAList[] | any,
   // 查詢list時候，人員限制
   searchLimit: "",
   // 會變動的資料
   formAllData: {
-    routeCreate: "feasibility-create",
-    routeSign: "feasibility-sign",
-    signPath: "/feasibility/sign/",
-    createPath: "/feasibility/create/",
-    searchFormsAPI: "GetOEMList",
-    id: "OEMId",
+    routeCreate: "cloudSoft-create",
+    routeSign: "cloudSoft-sign",
+    signPath: "/cloudSoft/sign/",
+    createPath: "/cloudSoft/create/",
+    searchFormsAPI: "GetEGAList",
+    id: "EGAId",
   },
 })
 
-onMounted(() => {
-  //TODO:EmpId帶自己id試試
-  // const { Empid = "222010" } = this.$route.query; //TODO:上線要註解這行
-  // const url = location.href;
-  // console.log("網址", url);
-  // const Empid = $route.query.Empid; //TODO:上線要打開這行
-  // console.log("取網址上的工號", Empid);
-  // 將userId存在store
-  // this.$store.commit("base/updateUserId", Empid);
-  // 將userId帶入actions取得使用者資料
-  // this.$store.dispatch("base/fetchUserData", Empid);
-  // 取部門資料
-  // this.$store.dispatch("base/fetchBranchData");
-  // 取專案資料
-  // this.$store.dispatch("base/fetchProjectAll")
-  // 清除專案名稱
-  // this.$store.commit("base/clearProject")
-  // 取 使用者尚未簽核的表單
-  // this.searchNotSign(this.userId);
+// 取部門資料
+const baseStoreConfig = baseStore();
+baseStoreConfig.getBranchData({
+  DeptId: "", //部門代號
+  DeptName: "" //部門名稱
 })
 
-// 當部門資料改變 取人員資料
-async function changePersons(DeptId:string) {
-  dataState.personOptions = await getPersonData({
-    DeptId: DeptId, //部門代號
-    EmpId: "", //工號
-    Company: "", //公司
-  })
-  console.log("有進", dataState.personOptions)
+// 取全部人員資料
+baseStoreConfig.getPersonData({
+  DeptId: "", //部門代號
+  EmpId: "", //工號
+  Company: "", //公司
+})
+
+// 取出 baseStore 裡的state資料
+const { baseData } = storeToRefs(baseStoreConfig);
+
+
+// 取使用者資料
+const userStoreConfig = userStore();
+userStoreConfig.getUserData({
+  DeptId: "", //部門代號
+  EmpId: userId, //工號
+  Company: "" //公司
+})
+// const { userData } = storeToRefs(userStoreConfig);
+
+onMounted(() => {
+  // 取 使用者尚未簽核的表單
+  searchNotSign(userId);
+})
+
+// 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
+watch(() => dataState.value.runningCount, (newValue) => {
+  console.log("watch", newValue)
+  dataState.value.isLoading = true;
+  if (dataState.value.runningCount === 0) {
+    dataState.value.isLoading = false;
+  }
+})
+
+// 當部門資料改變 過濾人員資料
+async function changePersons(DeptId: string) {
+  dataState.value.personValue = ""
+  dataState.value.personOptions = baseData.value.allPersons.filter(item => item.DeptId === DeptId)
 }
 // 查詢表單
-// async function searchFormList() {
-//   dataState.runningCount++;
-//   await getListAPI.GetOEMList(
-//   {
-//     Formno: dataState.projectNumber, // 送專案代號
-//     Formno2: "", // 送單號
-//     Name: "", // 送專案名稱
-//     status: dataState.statusValue, //狀態
-//     Coid: "", //公司代號
-//     DeptId: dataState.branchValue, //部門代號
-//     Startdt: dataState.startDate, //開始請假日期
-//     Enddt: dataState.endDate, //結束
-//     Createid: dataState.searchLimit,//原本填this.personValue
-//     type: "0",
-//   }
-//   ).then((response) => {
-//   console.log("搜尋到的資料", response.data);
-//   if (response.data == null) {
-//     Toast.fire({
-//       icon: "warning",
-//       title: "此條件查無資料！",
-//     });
-//   } else {
-//     // 判斷如果 搜尋欄位(申請人員)personValue有值，要過濾Empid是否等於personValue
-//     if (dataState.personValue) {
-//       dataState.searchResult = response.data.filter((item) => {
-//         if (item.Empid === dataState.personValue) {
-//           item.date = item.CreateDate.split(" ")[0];
-//           item.Status = item.Status ? item.Status : item.status;
-//           item.ProCode = item.ProCode === '' ? '待定' : item.ProCode
-//           item.ProName = item.ProName === '' ? '待定' : item.ProName
-//           return item
-//         }
-//       });
-//     } else {
-//       dataState.searchResult = response.data.map((item) => {
-//         item.date = item.CreateDate.split(" ")[0];
-//         item.Status = item.Status ? item.Status : item.status;
-//         item.ProCode = item.ProCode === '' ? '待定' : item.ProCode
-//         item.ProName = item.ProName === '' ? '待定' : item.ProName
-//         return item
-//       });
-//     }
-//   }
-//   dataState.runningCount--;
-//   })
-//   .catch((error) => {
-//     console.log(error, "查詢表單發生錯誤！");
-//     dataState.runningCount--;
-//     Toast.fire({
-//       icon: "warning",
-//       title: "無法取得資料，請聯絡IT人員！",
-//     });
-//   });
-// },
-// computed: {
-//   branchs() {
-//     return this.$store.state.base.branchs;
-//   },
-//   userId() {
-//     return this.$store.state.base.userId;
-//   },
-//   projectAll() {
-//     return this.$store.state.base.projectAll;
-//   },
-//   project() {
-//     return this.$store.state.base.project;
-//   },
-// }
-// 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
-// watch(dataState.runningCount, () => {
-//   if (dataState.runningCount === 0) {
-//     stadataStatete.isLoading = false;
-//   } else {
-//     dataState.isLoading = true;
-//   }
-// })
-// methods: {
-//     // 當改變專案代號時 取 專案名稱
-//     async fetchProName(proId) {
-//     if (proId === "") {
-//       this.$store.commit("base/clearProject")
-//       return
-//     }
-//     dataState.runningCount++;
-//     await this.$store.dispatch("base/fetchProjectData", proId).catch((error) => {
-//       this.$alert(error.message, {
-//         confirmButtonText: '確定',
-//         type: "warning"
-//       });
-//     }).finally(() => {
-//       dataState.runningCount--;
-//     })
-//   },
-    
-//     // 限制人員查詢表單，只能查詢自己的
-//     // 只有部分人員可以查詢全部，222010/GroupID="admin"
-//     async limitSearchForm(userId) {
-//     await baseAPI
-//       .GetEmpGroup({
-//         GroupID: "",
-//         EmpId: userId, //工號
-//       })
-//       .then((response) => {
-//         console.log("人員群組", response.data);
-//         const person = response.data;
-//         // 判斷可以查詢全部資料的人員，searchLimit帶空字串
-//         for (let p of person) {
-//           if (p.GroupID === "admin" || p.EmpId === "222010" || p.EmpId === "205002" || p.EmpId === "217008") {
-//             dataState.searchLimit = "";
-//             return
-//           }
-//         }
-//         // 其餘的代自己工號查詢
-//         dataState.searchLimit = userId;
-//       });
-//   },
+async function searchFormList() {
+  dataState.value.runningCount++;
+  await GetEGAList(
+    {
+      Formno: "", // 送單號
+      Name: "", // 送專案名稱
+      status: dataState.value.statusValue, //狀態
+      Coid: "", //公司代號
+      DeptId: dataState.value.branchValue, //部門代號
+      Startdt: dataState.value.startDate, //開始請假日期
+      Enddt: dataState.value.endDate, //結束
+      Createid: dataState.value.searchLimit,//原本填this.personValue
+      type: "0",
+    }
+  ).then((response: ResEGAList[]) => {
+    // console.log("搜尋到的資料", response);
+    if (response == null) {
+      Toast.fire({
+        icon: "warning",
+        title: "此條件查無資料！",
+      });
+    } else {
+      // 判斷如果 搜尋欄位(申請人員)personValue有值，要過濾Empid是否等於personValue
+      if (dataState.value.personValue) {
+        dataState.value.searchResult = response.filter((item) => {
+          if (item.Empid === dataState.value.personValue) {
+            item.CreateDate = item.CreateDate.split(" ")[0];
+            return item
+          }
+        });
+      } else {
+        dataState.value.searchResult = response.map((item) => {
+          item.CreateDate = item.CreateDate.split(" ")[0];
+          return item
+        });
+      }
+    }
+    dataState.value.runningCount--;
+  }).catch((error: any) => {
+    console.log(error)
+    resError("查詢表單發生錯誤" + error)
+  })
+}
+// 讓table表頭為黑底
+function headerStyleClass({ rowIndex }: any) {
+  if (rowIndex === 0) {
+    return "black-row";
+  }
+}
+// 跳至簽核頁面
+function clickRow(row: any) {
+  // console.log(row[dataState.formAllData.id]);
+  router.push(
+    `${dataState.value.formAllData.signPath}${row[dataState.value.formAllData.id]}/${userId
+    }`
+  );
+}
+// 查詢使用者 待簽核表單
+async function searchNotSign(id: string) {
+  console.log("有抓到使用者id", id);
+  dataState.value.runningCount++;
+  await GetEGAList({
+    Status: "1", //狀態
+    type: "0",
+  }).then((response: ResEGAList[]) => {
+    console.log("所有尚未簽核資料", response);
 
-//     // 查詢使用者 待簽核表單
-//     async searchNotSign(id) {
-//     console.log("有抓到使用者id", id);
-//     dataState.runningCount++;
-//     await getListAPI.GetOEMList({
-//       status: "1", //狀態
-//       type: "0",
-//     }).then((response) => {
-//       console.log("所有尚未簽核資料", response.data);
+    if (response == null) {
+      console.log("目前無待簽核表單");
+    } else {
+      dataState.value.searchResult = response.filter((item) => {
+        item.CreateDate = item.CreateDate.split(" ")[0];
+        return item.SIGNER == id
+      });
+      console.log("為使用者簽核的資料", dataState.value.searchResult);
+    }
+  }).then(async () => {
+    await limitSearchForm(id)
+    dataState.value.runningCount--;
+  }).catch((error: any) => {
+    console.log(error)
+    resError("查詢表單發生錯誤" + error)
+  })
+}
 
-//       if (response.data == null) {
-//         console.log("目前無待簽核表單");
-//       } else {
-//         dataState.searchResult = response.data.filter((item) => {
-//           item.date = item.CreateDate.split(" ")[0];
-//           item.Status = item.Status ? item.Status : item.status;
-//           item.ProCode = item.ProCode === '' ? '待定' : item.ProCode
-//           item.ProName = item.ProName === '' ? '待定' : item.ProName
-
-//           return item.SIGNER == id
-//         });
-//         console.log("為使用者簽核的資料", dataState.searchResult);
-//       }
-//     }).then(async () => {
-//       await this.limitSearchForm(id)
-//       dataState.runningCount--;
-//     })
-//       .catch((error) => {
-//         console.log(error, "查詢表單發生錯誤！");
-//         dataState.runningCount--;
-//         Toast.fire({
-//           icon: "warning",
-//           title: "無法取得資料，請聯絡IT人員！",
-//         });
-//       });
-//   },
-//   // 讓table表頭為黑底
-//   headerStyleClass({ rowIndex }) {
-//     if (rowIndex === 0) {
-//       return "black-row";
-//     }
-//   },
-//   clickRow(row) {
-//     // console.log(row[dataState.formAllData.id]);
-//     // 跑簽核頁面
-//     this.$router.push(
-//       `${dataState.formAllData.signPath}${row[dataState.formAllData.id]}/${this.userId
-//       }`
-//     );
-//   },
-// },
+// 限制人員查詢表單，只能查詢自己的
+// 只有部分人員可以查詢全部，222010/GroupID="admin"
+async function limitSearchForm(userId: string) {
+  await GetEmpGroup({
+    GroupID: "",
+    EmpId: userId, //工號
+  })
+    .then((response: ResEmpGroup[]) => {
+      console.log("人員群組", response);
+      const person = response;
+      // 判斷可以查詢全部資料的人員，searchLimit帶空字串
+      for (let p of person) {
+        if (p.GroupID === "admin" || p.EmpId === "222010") {
+          dataState.value.searchLimit = "";
+          return
+        }
+      }
+      // 其餘的代自己工號查詢
+      dataState.value.searchLimit = userId;
+    });
+}
 </script>
 
 <style>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import {searchPerson,getBranch} from '@/apis/baseAPI.js';
+import { resError } from '@/utils/base';
+import { searchPerson, getBranch } from '@/apis/baseAPI.js';
 
 export const baseStore = defineStore('baseStore', {
   state: () => ({
@@ -10,28 +11,30 @@ export const baseStore = defineStore('baseStore', {
         DeptName: "",
         ResourcesId: ""
       }],
-      persons: [] as UserInfo[]
+      // 全公司人員
+      allPersons: [] as ResUserInfo[]
     },
   }),
   actions: {
     // 向後端拿取部門資料
     async getBranchData(data: GetBranchsInfo) {
-      await getBranch(data).then((response: BranchsInfo[]) => {
+      await getBranch(data).then((response: ResBranchsInfo[]) => {
         this.baseData.branchs = response;
-        console.log("store部門資料", this.baseData.branchs)
+        // console.log("store部門資料", this.baseData.branchs)
+      }).catch((error: any) => {
+        console.log(error)
+        resError("API拿取部門資料錯誤" + error)
       })
     },
-    // async getBranchData(data: GetBranchsInfo): Promise<AxiosResponse<Branchs[]>> {
-    //   return await baseAPI.getBranch(data)
-    // },
-    // 取同部門全部人員資料
+    // 取全公司人員資料
     async getPersonData(data: GetUserInfo) {
-      await searchPerson(data).then((response: UserInfo[]) => {
-        return response;
-        // this.baseData.persons = response.data;
-        // console.log("store同部門全部人員資料", this.baseData.persons)
+      await searchPerson(data).then((response: ResUserInfo[]) => {
+        this.baseData.allPersons = response;
+        // console.log("store全公司人員資料", this.baseData.allPersons)
+      }).catch((error: any) => {
+        console.log(error)
+        resError("API拿取人員資料錯誤" + error)
       })
-
     },
   },
 })

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type {AxiosInstance} from 'axios';
+import type { AxiosInstance } from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 // import qs from 'qs';
 
@@ -30,7 +30,7 @@ service.interceptors.request.use(
 service.interceptors.response.use(
 	(response) => {
 		// 对响应数据做点什么
-    console.log("response",response)
+		// console.log("response",response)
 		if (response.status !== 200) {
 			return Promise.reject(service.interceptors.response);
 		} else {
