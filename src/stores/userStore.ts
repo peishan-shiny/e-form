@@ -1,10 +1,26 @@
+// import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { resError } from '@/utils/base';
 import { searchPerson } from '@/apis/baseAPI.js'
 
 export const userStore = defineStore('userStore', {
 	state: () => ({
-		userData: null as ResUserInfo | null
+		userData: {
+			DeptId: "",
+			DeptName: "",
+			DeptName_E: "",
+			EmpId: "",
+			EmpName: "",
+			ResourcesId: "",
+			ResourcesName: "",
+			ResourcesName_E: "",
+			Compose: "",
+			FullName: "",
+			Title: "",
+			Language: "",
+			Email: "",
+			type: ""
+		}
 	}),
 	actions: {
 		// 向後端拿取人員資料

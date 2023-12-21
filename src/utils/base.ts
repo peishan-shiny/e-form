@@ -2,7 +2,7 @@ import Swal from 'sweetalert2'
 
 // api回應有error
 export function resError(data: any) {
-  // 跳出成功視窗
+  // 跳出視窗
   Swal.fire({
     icon: "error",
     title: "資料回應錯誤，請聯絡IT人員！",
@@ -19,4 +19,13 @@ export const Toast = Swal.mixin({
   showConfirmButton: false,
   timer: 2500
 })
+
+// 產生當下日期
+export function createDate() {
+  const date = new Date();
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  return y + "/" + m + "/" + d;
+}
 

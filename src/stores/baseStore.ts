@@ -12,7 +12,9 @@ export const baseStore = defineStore('baseStore', {
         ResourcesId: ""
       }],
       // 全公司人員
-      allPersons: [] as ResUserInfo[]
+      allPersons: [] as ResUserInfo[],
+      // 上傳的file
+      file: [] as any[]
     },
   }),
   actions: {
@@ -35,6 +37,18 @@ export const baseStore = defineStore('baseStore', {
         console.log(error)
         resError("API拿取人員資料錯誤" + error)
       })
+    },
+    // 修改 file
+    updateFile(data: any) {
+      // console.log("typeof", typeof data)
+      this.baseData.file.push(...Object.values(data))
+      console.log("baseStore updateFile：", this.baseData.file)
+    },
+    // 刪除 file - 刪除上傳的檔案
+    deleteFile(clickItem: string) {
+      // console.log("clickItem", clickItem)
+      this.baseData.file = this.baseData.file.filter((item) => item.name !== clickItem);
+      console.log("刪除後剩下的檔案", this.baseData.file);
     },
   },
 })

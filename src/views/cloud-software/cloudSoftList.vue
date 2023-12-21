@@ -122,7 +122,7 @@ const dataState = ref({
   // 接api拿部門資料
   branchValue: "",
   // 接api拿部門人員資料
-  personOptions: [] as ResUserInfo[] | any,
+  personOptions: [] as ResUserInfo[],
   personValue: "",
   // 下拉式 表單狀態
   statusOptions: [
@@ -191,14 +191,13 @@ onMounted(() => {
 })
 
 // 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
-watch(() => dataState.value.runningCount, (newValue) => {
-  console.log("watch", newValue)
+watch(() => dataState.value.runningCount, () => {
+
   dataState.value.isLoading = true;
   if (dataState.value.runningCount === 0) {
     dataState.value.isLoading = false;
   }
 })
-
 // 當部門資料改變 過濾人員資料
 async function changePersons(DeptId: string) {
   dataState.value.personValue = ""
@@ -244,23 +243,10 @@ async function searchFormList() {
     }
     dataState.value.runningCount--;
   }).catch((error: any) => {
+    dataState.value.runningCount--;
     console.log(error)
     resError("查詢表單發生錯誤" + error)
   })
-}
-// 讓table表頭為黑底
-function headerStyleClass({ rowIndex }: any) {
-  if (rowIndex === 0) {
-    return "black-row";
-  }
-}
-// 跳至簽核頁面
-function clickRow(row: any) {
-  // console.log(row[dataState.formAllData.id]);
-  router.push(
-    `${dataState.value.formAllData.signPath}${row[dataState.value.formAllData.id]}/${userId
-    }`
-  );
 }
 // 查詢使用者 待簽核表單
 async function searchNotSign(id: string) {
@@ -285,6 +271,7 @@ async function searchNotSign(id: string) {
     await limitSearchForm(id)
     dataState.value.runningCount--;
   }).catch((error: any) => {
+    dataState.value.runningCount--;
     console.log(error)
     resError("查詢表單發生錯誤" + error)
   })
@@ -310,6 +297,20 @@ async function limitSearchForm(userId: string) {
       // 其餘的代自己工號查詢
       dataState.value.searchLimit = userId;
     });
+}
+// 跳至簽核頁面
+function clickRow(row: any) {
+  // console.log(row[dataState.formAllData.id]);
+  router.push(
+    `${dataState.value.formAllData.signPath}${row[dataState.value.formAllData.id]}/${userId
+    }`
+  );
+}
+// 讓table表頭為黑底
+function headerStyleClass({ rowIndex }: any) {
+  if (rowIndex === 0) {
+    return "black-row";
+  }
 }
 </script>
 

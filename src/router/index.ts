@@ -14,7 +14,7 @@ const router = createRouter({
       component: () => import('@/views/cloud-software/cloudSoftList.vue')
     },
     {
-      path: '/cloudSoft/creat',
+      path: '/cloudSoft/create',
       name: 'cloudSoft-create',
       component: () => import('@/views/cloud-software/cloudSoftCreate.vue')
     }
