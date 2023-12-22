@@ -4,11 +4,11 @@
     <div class="create-form">
       <p class="title">軟體申請單</p>
       <!-- 按鈕 -->
-      <CreateTopBtn :formId="dataState.formId" @call-showBox="verifyForm" />
+      <CreateTopBtn :formId="dataState.formId" @call-show-box="verifyForm" />
 
       <!-- 專案內容 -->
       <div class="area">
-        <el-form :model="dataState.ruleForm" :rules="dataState.rules" ref="ruleForm" label-width="170px"
+        <el-form :model="dataState.ruleForm" :rules="dataState.rules" ref="ruleFormDOM" label-width="170px"
           class="demo-ruleForm">
           <div class="area-row">
             <el-col :span="12">
@@ -161,10 +161,11 @@
 import Swal from 'sweetalert2'
 import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { resError, Toast } from '@/utils/base';
+import { resError, pushWaitSignPage, Toast } from '@/utils/base';
 import { OEDAdd } from '@/apis/addFormAPI.js';
 import { userStore } from '@/stores/userStore';
 import { baseStore } from '@/stores/baseStore';
+import { createStore } from '@/stores/createStore';
 import { UploadFormData } from '@/apis/baseAPI.js';
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
@@ -172,12 +173,17 @@ const CreateTopBtn = defineAsyncComponent(() => import('@/components/CreateTopBt
 const FileCom = defineAsyncComponent(() => import('@/components/FileCom.vue'));
 
 const userStoreConfig = userStore()
-const { userData } = storeToRefs(userStoreConfig);
+const { userStoreData } = storeToRefs(userStoreConfig);
 
 const baseStoreConfig = baseStore()
-const { baseData } = storeToRefs(baseStoreConfig);
+const { baseStoreData } = storeToRefs(baseStoreConfig);
+// 將file資料清除
+baseStoreData.value.file = []
 
-const ruleForm = ref(null)
+const createStoreConfig = createStore()
+// const { createStoreData } = storeToRefs(createStoreConfig);
+
+const ruleFormDOM = ref(null)
 const dataState = ref({
   // 送出表單的等待畫面
   isLoading: false,
@@ -315,7 +321,7 @@ watch(() => dataState.value.runningCount, (newValue) => {
   }
 })
 function verifyForm() {
-  ruleForm.value.validate((valid: boolean) => {
+  (ruleFormDOM.value as any).validate((valid: boolean) => {
     if (valid) {
       console.log("驗證ok", valid);
       showBox()
@@ -350,21 +356,21 @@ async function verifyContent() {
     OEDId: "", //單號
     ProCode: "test1120", //專案代號
     Status: "1", //狀態  
-    ComId: userData.value.ResourcesId,
-    DeptId: userData.value.DeptId,
+    ComId: userStoreData.value.ResourcesId,
+    DeptId: userStoreData.value.DeptId,
     FILENAME: "1221test", //檔案名稱
     VERSION: "1221test", //版次      
-    Createid: userData.value.EmpId,
+    Createid: userStoreData.value.EmpId,
     CreateDate: "",
     Type: "0",
   })
-    .then(async (response: any) => {
+    .then(async (response: string) => {
       console.log("回應表單號碼", response);
       // 存取表單號碼
       dataState.value.formId = response;
 
       // 如果附件有東西，上傳給後端
-      if (baseData.value.file.length > 0) {
+      if (baseStoreData.value.file.length > 0) {
         const result = await uploadFile();
         // 判斷uploadFile函式，檔案上傳是否成功
         if (result === false) {
@@ -374,40 +380,23 @@ async function verifyContent() {
 
       return dataState.value.formId;
     })
-    // .then(async (formId: any) => {
-    //   // 上傳產品規格表
-    //   await uploadProFormat(formId);
-
-    //   return dataState.value.formId;
-    // })
-    // .then(async (formId: any) => {
-    //   // 取得第一個簽核人員
-    //   const inputData = {
-    //     formId: formId,
-    //     formName: "軟體申請單",
-    //   };
-    //   await this.$store.dispatch("sign/fetchNextSigner", inputData);
-    //   console.log("等待取簽核人員外面的await結束");
-    // })
-    .then(async () => {
-      // 將file資料清除
-      // await this.$store.commit("base/clearFile");
+    .then(async (formId: string) => {
+      // 取得第一個簽核人員
+      const inputData = {
+        formId: formId,
+        formName: "軟體申請單",
+      };
+      console.log("取第一個簽核人");
+      await createStoreConfig.fetchNextSigner(inputData)
+      console.log("發信前");
+      await createStoreConfig.sendMail(inputData)
+      console.log("結束");
+    })
+    .then(() => {
       console.log("成功");
       dataState.value.runningCount--;
       // 跳出成功視窗
-      // const Swal = require("sweetalert2");
-      // Swal.fire({
-      //   title: "成功送出",
-      //   confirmButtonColor: "#333",
-      //   confirmButtonText: "確認",
-      // }).then((resule) => {
-      //   console.log(resule);
-      //   if (resule.value) {
-      //     // 轉跳到各表單搜尋頁面
-      //     // window.top.location =
-      //     //   "https://esys.orange-electronic.com/RDDocument/Index?id=OEB&formN=index";
-      //   }
-      // });
+      pushWaitSignPage('OED')
     })
     .catch((error: any) => {
       console.log(error)
@@ -418,22 +407,22 @@ async function verifyContent() {
 
 // 上傳附件給後端
 async function uploadFile() {
-  if (baseData.value.file.length === 0) return true;
+  if (baseStoreData.value.file.length === 0) return true;
   // shift() 用法 => 會把file陣列裡的第一個拿出來，且會改變原本陣列detailFile會刪除第一個
-  const uploadDFileCurrent = baseData.value.file.shift();
+  const uploadDFileCurrent = baseStoreData.value.file.shift();
   console.log("uploadDFileCurrent", uploadDFileCurrent);
 
   let formData = new FormData();
   formData.append("file", uploadDFileCurrent);
   formData.append("FileName", uploadDFileCurrent.name);
   formData.append("FormId", dataState.value.formId);
-  formData.append("EmpId", userData.value.EmpId);
+  formData.append("EmpId", userStoreData.value.EmpId);
   formData.append("WebName", "OEDForm");
-  dataState.value.runningCount++;
 
+  dataState.value.runningCount++;
   // fileUploadStatus記錄上傳檔案成功或失敗
   const fileUploadStatus = await UploadFormData(formData)
-    .then((response: any) => {
+    .then((response: ResUploadFile) => {
       console.log("附件上傳後端", response);
       dataState.value.runningCount--;
       return true;

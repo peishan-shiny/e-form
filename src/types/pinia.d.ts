@@ -74,11 +74,40 @@ interface ResEGAList {
 }
 
 // 附件上傳後端 後端回應
-// EmpId: "222010"
-// FormId: "OED202312002"
-// WebName: "OEDForm"
-// filename: "OEDForm202312211731638387766999206320"
-// success: true
+interface ResUploadFile {
+  EmpId: string
+  FormId: string
+  WebName: string
+  filename: string
+  success: boolean
+}
+
+// 取下一位簽核人員 後端回應
+interface ResNextSigner {
+  FORMNO: string,
+  SIGNORDER: number | string,
+  STEPNAME: string,
+  SIGNER: string,
+  SIGNERNAME: string,
+  ACTUALNAME: string,
+  ACTUALSIGNER: string,
+  SIGNRESULT: number | string,
+  OPINION: string,
+  SIGNTIME: null | any,
+  ALLOWCUSTOM: boolean,
+  SignGroup: string,
+  ISEnable: string | boolean,
+  types: string,
+  ExceId: null | any,
+  Status: null | any
+}
+
+// 寄信 給後端
+interface GetSendMail {
+  Empid: string, //工號
+  Sub: string, //主旨
+  Messg: string, //內文
+}
 
 // 定義軟體申請單create的值
 interface SoftCreateValue {

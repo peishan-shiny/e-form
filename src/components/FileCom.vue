@@ -5,7 +5,7 @@
       <div class="area-title">附加文件：</div>
       <!-- 建立表單 -->
       <div class="file-list" v-if="model !== 'sign'">
-        <p class="file" v-for="item in baseData.file" :key="item.name">
+        <p class="file" v-for="item in baseStoreData.file" :key="item.name">
           {{ item.name }}
           <el-icon>
             <DeleteFilled class="delete" @click="deleteFile(item.name)" />
@@ -25,13 +25,11 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-// import { baseURLAPI } from '@/utils/helper'
 // import baseAPI from "@/apis/baseAPI";
-// import { Toast } from "@/utils/helper";
 import { baseStore } from '@/stores/baseStore';
 
 const baseStoreConfig = baseStore()
-const { baseData } = storeToRefs(baseStoreConfig);
+const { baseStoreData } = storeToRefs(baseStoreConfig);
 
 const props = defineProps({
   model: { type: String, default: "create" },

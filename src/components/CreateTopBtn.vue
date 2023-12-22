@@ -6,7 +6,7 @@
         <img src="@/assets/white/電子表單icon_送簽.png" alt="" class="icon" />
         送簽表單
       </button>
-      <button @click="$refs.fileDOM.click()" class="top-btn common">
+      <button @click="($refs.fileDOM as any).click()" class="top-btn common">
         <input ref="fileDOM" @change="handleFileChange" type="file" multiple class="input-file" />
         <img src="@/assets/black/電子表單icon_附加檔案.png" alt="" class="icon" />
         附加文件
@@ -36,15 +36,15 @@
         <div class="area-row">
           <div class="area-title area-col-3">
             公司別：
-            <span>{{ userData.ResourcesName }}</span>
+            <span>{{ userStoreData.ResourcesName }}</span>
           </div>
           <div class="area-title area-col-3">
             部門：
-            <span>{{ userData.DeptName }}</span>
+            <span>{{ userStoreData.DeptName }}</span>
           </div>
           <div class="area-title area-col-3">
             建檔人員：
-            <span>{{ userData.EmpName }}</span>
+            <span>{{ userStoreData.EmpName }}</span>
           </div>
         </div>
       </div>
@@ -59,12 +59,13 @@ import { resError, Toast, createDate } from '@/utils/base';
 import { userStore } from '@/stores/userStore';
 import { baseStore } from '@/stores/baseStore';
 
-defineProps<{
+const props = defineProps<{
   formId?: string
 }>()
+console.log("props-formId", props.formId)
 
 const userStoreConfig = userStore()
-const { userData } = storeToRefs(userStoreConfig);
+const { userStoreData } = storeToRefs(userStoreConfig);
 
 const baseStoreConfig = baseStore()
 

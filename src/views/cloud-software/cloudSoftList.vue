@@ -34,7 +34,7 @@
               <div class="search-title">申請人員</div>
               <el-select v-model="dataState.branchValue" @change="changePersons(dataState.branchValue)" placeholder="部門"
                 no-data-text="無數據" clearable>
-                <el-option v-for="item in baseData.branchs" :key="item.DeptId" :value="item.DeptId"
+                <el-option v-for="item in baseStoreData.branchs" :key="item.DeptId" :value="item.DeptId"
                   :label="item.DeptName">
                 </el-option>
               </el-select>
@@ -71,11 +71,23 @@
         <el-table-column type="index" label="項次" width="80" sortable></el-table-column>
         <el-table-column prop="CreateDate" label="建立日期" width="100">
         </el-table-column>
-        <el-table-column :prop="dataState.formAllData.id" label="表單單號" min-width="130" sortable>
+        <el-table-column :prop="dataState.formAllData.id" label="表單號碼" min-width="130" sortable>
         </el-table-column>
-        <el-table-column prop="EmpName" label="建檔人員" min-width="100">
+        <el-table-column prop="EmpName" label="申請原因" min-width="100">
         </el-table-column>
-        <el-table-column prop="Status" label="簽核狀態" min-width="100">
+        <el-table-column prop="EmpName" label="申請地區" min-width="100">
+        </el-table-column>
+        <el-table-column prop="EmpName" label="申請類別" min-width="100">
+        </el-table-column>
+        <el-table-column prop="EmpName" label="程式名稱" min-width="100">
+        </el-table-column>
+        <el-table-column prop="EmpName" label="程式版號" min-width="100">
+        </el-table-column>
+        <el-table-column prop="EmpName" label="SVN版號" min-width="100">
+        </el-table-column>
+        <el-table-column prop="EmpName" label="申請人員" min-width="100">
+        </el-table-column>
+        <el-table-column prop="Status" label="表單狀態" min-width="100">
         </el-table-column>
         <el-table-column prop="NextSIGNER" label="待簽人員" min-width="150">
         </el-table-column>
@@ -173,7 +185,7 @@ baseStoreConfig.getPersonData({
 })
 
 // 取出 baseStore 裡的state資料
-const { baseData } = storeToRefs(baseStoreConfig);
+const { baseStoreData } = storeToRefs(baseStoreConfig);
 
 
 // 取使用者資料
@@ -183,7 +195,7 @@ userStoreConfig.getUserData({
   EmpId: userId, //工號
   Company: "" //公司
 })
-// const { userData } = storeToRefs(userStoreConfig);
+// const { userStoreData } = storeToRefs(userStoreConfig);
 
 onMounted(() => {
   // 取 使用者尚未簽核的表單
@@ -201,7 +213,7 @@ watch(() => dataState.value.runningCount, () => {
 // 當部門資料改變 過濾人員資料
 async function changePersons(DeptId: string) {
   dataState.value.personValue = ""
-  dataState.value.personOptions = baseData.value.allPersons.filter(item => item.DeptId === DeptId)
+  dataState.value.personOptions = baseStoreData.value.allPersons.filter(item => item.DeptId === DeptId)
 }
 // 查詢表單
 async function searchFormList() {

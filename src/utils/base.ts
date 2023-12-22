@@ -12,6 +12,22 @@ export function resError(data: any) {
   })
 }
 
+// 轉跳帶簽核頁面
+export function pushWaitSignPage(data: string) {
+  Swal.fire({
+    title: "成功送出",
+    confirmButtonColor: "#333",
+    confirmButtonText: "確認",
+  }).then((resule) => {
+    console.log(resule);
+    if (resule.value) {
+      // 轉跳到各表單搜尋頁面
+      (window.top as any).location =
+        `https://esys.orange-electronic.com/RDDocument/Index?id=${data}&formN=index`;
+    }
+  });
+}
+
 // null或undefined 提示
 export const Toast = Swal.mixin({
   toast: true,

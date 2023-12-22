@@ -33,3 +33,20 @@ export function UploadFormData(data) {
         headers: { 'Content-Type': 'multipart/form-data' },
     });
 }
+
+// 取得下一個簽核人員
+export function GetSignStepNext(formId) {
+    return request({
+        url: `/GetSignStepNext/${formId}`,
+        method: 'post',
+    });
+}
+
+// 發信
+export function MailSend(data) {
+    return request({
+        url: '/MailSend',
+        method: 'post',
+        data,
+    });
+}
