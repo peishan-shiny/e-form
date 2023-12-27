@@ -23,7 +23,8 @@ export function pushWaitSignPage(data: string) {
     if (resule.value) {
       // 轉跳到各表單搜尋頁面
       (window.top as any).location =
-        `https://esys.orange-electronic.com/RDDocument/Index?id=${data}&formN=index`;
+        `https://esys.orange-electronic.com/ODF/RDN?id=${data}`;
+      // `https://esys.orange-electronic.com/RDDocument/Index?id=${data}&formN=index`;
     }
   });
 }
@@ -43,5 +44,12 @@ export function createDate() {
   const m = date.getMonth() + 1;
   const d = date.getDate();
   return y + "/" + m + "/" + d;
+}
+
+// 下載功能，拿取表單的附件
+export function downloadFile(filePath: string) {
+  window.open(
+    "https://orangeapitest.orange-electronic.com/api" + "/Download?file=" + filePath
+  );
 }
 

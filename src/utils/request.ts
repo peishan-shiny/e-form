@@ -1,7 +1,6 @@
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
-// import qs from 'qs';
 
 // 配置新建一个 axios 实例
 const service: AxiosInstance = axios.create({
@@ -34,18 +33,19 @@ service.interceptors.response.use(
 		if (response.status !== 200) {
 			return Promise.reject(service.interceptors.response);
 		} else {
-			return response.data;
+			// console.log("攔截器", response)
+			return response;
 		}
 	},
 	(error) => {
 		// 对响应错误做点什么
 		if (error.message.indexOf('timeout') != -1) {
-			ElMessage.error('网络超时');
+			ElMessage.error('網路超時');
 		} else if (error.message == 'Network Error') {
-			ElMessage.error('网络连接错误');
+			ElMessage.error('網路連接錯誤');
 		} else {
 			if (error.response.data) ElMessage.error(error.response.statusText);
-			else ElMessage.error('接口路径找不到');
+			else ElMessage.error('接口路徑找不到');
 		}
 		return Promise.reject(error);
 	}

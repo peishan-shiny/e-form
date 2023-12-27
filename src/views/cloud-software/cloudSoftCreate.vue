@@ -87,8 +87,9 @@
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="四階料號：" prop="bomElno">
-                <el-input v-model="dataState.ruleForm.bomElno"></el-input>
+              <el-form-item label="四階料號：">
+                <el-input v-model="dataState.ruleForm.bomElno"
+                  @change="fetchModelNO(dataState.ruleForm.bomElno, 'bomElno')"></el-input>
               </el-form-item>
             </el-col>
           </div>
@@ -101,8 +102,9 @@
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="蘇州四階料號：" prop="suzobomElno">
-                <el-input v-model="dataState.ruleForm.suzobomElno"></el-input>
+              <el-form-item label="蘇州四階料號：">
+                <el-input v-model="dataState.ruleForm.suzobomElno"
+                  @change="fetchModelNO(dataState.ruleForm.suzobomElno, 'suzobomElno')"></el-input>
               </el-form-item>
             </el-col>
           </div>
@@ -153,25 +155,27 @@
 
       <!-- 附加文件 -->
       <FileCom />
+      <p class="version">QP-038-07-H</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { type AxiosResponse } from 'axios';
 import Swal from 'sweetalert2'
 import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import { resError, pushWaitSignPage, Toast } from '@/utils/base';
-import { OEDAdd } from '@/apis/addFormAPI.js';
-import { userStore } from '@/stores/userStore';
-import { baseStore } from '@/stores/baseStore';
-import { createStore } from '@/stores/createStore';
-import { UploadFormData } from '@/apis/baseAPI.js';
+import { RDDAdd } from '@/apis/addFormAPI.js';
+import { UploadFormData, GetElno } from '@/apis/baseAPI.js';
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
 const CreateTopBtn = defineAsyncComponent(() => import('@/components/CreateTopBtn.vue'));
 const FileCom = defineAsyncComponent(() => import('@/components/FileCom.vue'));
 
+import { userStore } from '@/stores/userStore';
+import { baseStore } from '@/stores/baseStore';
+import { createStore } from '@/stores/createStore';
 const userStoreConfig = userStore()
 const { userStoreData } = storeToRefs(userStoreConfig);
 
@@ -181,7 +185,6 @@ const { baseStoreData } = storeToRefs(baseStoreConfig);
 baseStoreData.value.file = []
 
 const createStoreConfig = createStore()
-// const { createStoreData } = storeToRefs(createStoreConfig);
 
 const ruleFormDOM = ref(null)
 const dataState = ref({
@@ -301,12 +304,12 @@ const dataState = ref({
     applyType: [
       { type: 'array', required: true, message: "請選擇申請類別", trigger: "change" },
     ],
-    bomElno: [
-      { required: true, message: "請填寫四階料號", trigger: "change" },
-    ],
-    suzobomElno: [
-      { required: true, message: "請填寫蘇州四階料號", trigger: "change" },
-    ],
+    // bomElno: [
+    //   { required: true, message: "請填寫四階料號", trigger: "change" },
+    // ],
+    // suzobomElno: [
+    //   { required: true, message: "請填寫蘇州四階料號", trigger: "change" },
+    // ],
   },
   // 上傳成功將單號存起來
   formId: "",
@@ -352,22 +355,35 @@ async function showBox() {
 // 驗證表單是否有填寫完整
 async function verifyContent() {
   dataState.value.runningCount++;
-  await OEDAdd({
-    OEDId: "", //單號
-    ProCode: "test1120", //專案代號
-    Status: "1", //狀態  
-    ComId: userStoreData.value.ResourcesId,
-    DeptId: userStoreData.value.DeptId,
-    FILENAME: "1221test", //檔案名稱
-    VERSION: "1221test", //版次      
+  await RDDAdd({
+    RDDId: "", //單號
+    Status: "1", //狀態
+    ComId: userStoreData.value.ResourcesId, //公司代號
+    DeptId: userStoreData.value.DeptId, //部門代號
+    applyDept: dataState.value.ruleForm.applyDept, //申請單位
+    applyReason: dataState.value.ruleForm.applyReason, //申請原因
+    programV: dataState.value.ruleForm.programV, //程式版號
+    SVNV: dataState.value.ruleForm.SVNV, //SVN版號
+    programName: dataState.value.ruleForm.programName, //程式名稱
+    Model: dataState.value.ruleForm.Model, //適用機種
+    IC: dataState.value.ruleForm.IC, //IC
+    applyArea: dataState.value.ruleForm.applyArea.join(","), //申請地區
+    applyType: dataState.value.ruleForm.applyType.join(","), //申請類別
+    bomElno: dataState.value.ruleForm.bomElno, //四階料號
+    modelNO: dataState.value.ruleForm.modelNO, //Model NO
+    suzobomElno: dataState.value.ruleForm.suzobomElno, //蘇州四階料號
+    suzoModelNO: dataState.value.ruleForm.suzoModelNO, //蘇州Model NO
+    reviseB: dataState.value.ruleForm.reviseB, //修改前內容
+    reviseA: dataState.value.ruleForm.reviseA, //修改後內容
+    reviseDoc: dataState.value.ruleForm.reviseDoc, //相關文件是否修改
+    choiceDoc: dataState.value.ruleForm.choiceDoc.join(","), //選擇修改文件
     Createid: userStoreData.value.EmpId,
-    CreateDate: "",
-    Type: "0",
+    Type: "0"
   })
-    .then(async (response: string) => {
-      console.log("回應表單號碼", response);
+    .then(async (response: AxiosResponse<string>) => {
+      console.log("回應表單號碼", response.data);
       // 存取表單號碼
-      dataState.value.formId = response;
+      dataState.value.formId = response.data;
 
       // 如果附件有東西，上傳給後端
       if (baseStoreData.value.file.length > 0) {
@@ -396,7 +412,7 @@ async function verifyContent() {
       console.log("成功");
       dataState.value.runningCount--;
       // 跳出成功視窗
-      pushWaitSignPage('OED')
+      pushWaitSignPage('RDD')
     })
     .catch((error: any) => {
       console.log(error)
@@ -417,7 +433,7 @@ async function uploadFile() {
   formData.append("FileName", uploadDFileCurrent.name);
   formData.append("FormId", dataState.value.formId);
   formData.append("EmpId", userStoreData.value.EmpId);
-  formData.append("WebName", "OEDForm");
+  formData.append("WebName", "RDDForm");
 
   dataState.value.runningCount++;
   // fileUploadStatus記錄上傳檔案成功或失敗
@@ -442,5 +458,22 @@ async function uploadFile() {
       resolve(uploadFile());
     }, 1000);
   });
+}
+
+// 依照四階料號拿取ModelNO
+async function fetchModelNO(bomElno: string, type: string) {
+  await GetElno(bomElno).then(async (response: any) => {
+    if (type === 'bomElno') {
+      dataState.value.ruleForm.modelNO = response.data[0].el_taxno
+    } else {
+      dataState.value.ruleForm.suzoModelNO = response.data[0].el_taxno
+    }
+
+    console.log("ModelNO", dataState.value.ruleForm.modelNO)
+    console.log("suzoModelNO", dataState.value.ruleForm.suzoModelNO)
+  }).catch((error: any) => {
+    console.log(error)
+    resError("取ModelNO發生錯誤" + error)
+  })
 }
 </script>

@@ -1,8 +1,8 @@
 import request from '@/utils/request';
 
-export function OEDAdd(data) {
+export function RDDAdd(data) {
   return request({
-    url: '/OEDAdd',
+    url: '/RDDAdd',
     method: 'post',
     data,
   });

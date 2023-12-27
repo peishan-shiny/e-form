@@ -62,7 +62,7 @@ import { baseStore } from '@/stores/baseStore';
 const props = defineProps<{
   formId?: string
 }>()
-console.log("props-formId", props.formId)
+console.log("-formId", props.formId)
 
 const userStoreConfig = userStore()
 const { userStoreData } = storeToRefs(userStoreConfig);
@@ -80,11 +80,6 @@ const fileDOM = ref(null)
 onMounted(() => {
   dataState.value.today = createDate();
 })
-
-// 點擊按鈕連至fileDOM
-// function clickDOM() {
-//   fileDOM.value.click()
-// }
 
 // 上傳附件顯示在網頁上
 function handleFileChange(e: any) {
@@ -104,11 +99,6 @@ function handleFileChange(e: any) {
     });
   }
 }
-
-// 點擊送簽
-// function clickSubmit() {
-//   this.$emit("");
-// },
 
 </script>
 

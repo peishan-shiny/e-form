@@ -1,3 +1,4 @@
+import { type AxiosResponse } from 'axios';
 import { defineStore } from 'pinia';
 import { resError } from '@/utils/base';
 import { searchPerson, getBranch } from '@/apis/baseAPI.js';
@@ -20,8 +21,8 @@ export const baseStore = defineStore('baseStore', {
   actions: {
     // 向後端拿取部門資料
     async getBranchData(data: GetBranchsInfo) {
-      await getBranch(data).then((response: ResBranchsInfo[]) => {
-        this.baseStoreData.branchs = response;
+      await getBranch(data).then((response: AxiosResponse<ResBranchsInfo[]>) => {
+        this.baseStoreData.branchs = response.data;
         // console.log("store部門資料", this.baseStoreData.branchs)
       }).catch((error: any) => {
         console.log(error)
@@ -30,8 +31,8 @@ export const baseStore = defineStore('baseStore', {
     },
     // 取全公司人員資料
     async getPersonData(data: GetUserInfo) {
-      await searchPerson(data).then((response: ResUserInfo[]) => {
-        this.baseStoreData.allPersons = response;
+      await searchPerson(data).then((response: AxiosResponse<ResUserInfo[]>) => {
+        this.baseStoreData.allPersons = response.data;
         // console.log("store全公司人員資料", this.baseStoreData.allPersons)
       }).catch((error: any) => {
         console.log(error)

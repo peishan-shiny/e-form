@@ -13,19 +13,24 @@
         </p>
       </div>
       <!-- 簽核頁面 -->
-      <!-- <div class="file-list" v-if="model === 'sign'">
-        <a v-for="item in fileData" :key="item.FileName" class="downloadURL" @click="downloadFile(item.FilePath)">{{
-          item.FileName }}
+      <div class="file-list" v-if="model === 'sign'">
+        <a v-for="item in dataState.fileData" :key="item.FileName" class="downloadURL"
+          @click="downloadFile(item.FilePath)">{{
+            item.FileName }}
           <button class="common download-btn">下載附件</button></a>
-      </div> -->
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { type AxiosResponse } from 'axios';
 import { onMounted, ref, watch } from 'vue';
+import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
-// import baseAPI from "@/apis/baseAPI";
+
+import { resError, downloadFile } from '@/utils/base';
+import { GetWFP } from '@/apis/baseAPI.js';
 import { baseStore } from '@/stores/baseStore';
 
 const baseStoreConfig = baseStore()
@@ -38,42 +43,39 @@ const props = defineProps({
 
 const dataState = ref({
   // 建立日期
-  fileData: [],
+  fileData: [] as ResFile[],
 })
+onMounted(() => {
+  if (props.model === "sign") {
+    console.log("有進來拿file資料")
+    const route = useRoute();
+    fetchGetWFP(route.params.formId);
+  }
+})
+
 
 // 刪除時commit刪除function
 function deleteFile(clickItem: string) {
   baseStoreConfig.deleteFile(clickItem)
 }
 
-// 拿取原表單附件的資料
-// async function fetchFile(formId) {
-//   try {
-//     const response = await baseAPI.downloadFile({
-//       FileId: "", //附檔編號
-//       FileName: "", //附檔名稱
-//       FilePath: "", //附檔存放路徑
-//       WebName: props.toFileCom, //附檔所在網頁名稱
-//       WebID: formId, //附檔所在 對應表單表編號ID
-//       ExecID: "",
-//     });
-//     this.fileData = response.data;
-//     console.log("拿取原附件", this.fileData);
+// 取原表單附件的資料
+async function fetchGetWFP(formId: string | string[]) {
+  await GetWFP({
+    FileId: "", //附檔編號
+    FileName: "", //附檔名稱
+    FilePath: "", //附檔存放路徑
+    WebName: props.toFileCom, //附檔所在網頁名稱
+    WebID: formId, //附檔所在 對應表單表編號ID
+    ExecID: "",
+  }).then(async (response: AxiosResponse<ResFile[]>) => {
+    dataState.value.fileData = response.data
+    console.log("元件FileCom：", dataState.value.fileData);
+  }).catch((error: any) => {
+    console.log(error)
+    resError("API取原表單附件發生錯誤" + error)
+  })
+}
 
-//     // 優化原附件的檔名顯示
-//   } catch (error) {
-//     console.log(error);
-//     Toast.fire({
-//       icon: "warning",
-//       title: "無法取得附件資料，請聯絡IT人員！",
-//     });
-//   }
-// }
-// 下載功能，拿取表單的附件
-// function downloadFile(filePath) {
-//   window.open(
-//     baseURLAPI + "/Download?file=" + filePath
-//   );
-// }
 
 </script>

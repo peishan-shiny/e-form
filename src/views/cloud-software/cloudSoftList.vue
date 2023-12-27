@@ -73,21 +73,21 @@
         </el-table-column>
         <el-table-column :prop="dataState.formAllData.id" label="表單號碼" min-width="130" sortable>
         </el-table-column>
-        <el-table-column prop="EmpName" label="申請原因" min-width="100">
+        <el-table-column prop="applyReason" label="申請原因" min-width="100">
         </el-table-column>
-        <el-table-column prop="EmpName" label="申請地區" min-width="100">
+        <el-table-column prop="applyArea" label="申請地區" min-width="100">
         </el-table-column>
-        <el-table-column prop="EmpName" label="申請類別" min-width="100">
+        <el-table-column prop="applyType" label="申請類別" min-width="100">
         </el-table-column>
-        <el-table-column prop="EmpName" label="程式名稱" min-width="100">
+        <el-table-column prop="programName" label="程式名稱" min-width="100">
         </el-table-column>
-        <el-table-column prop="EmpName" label="程式版號" min-width="100">
+        <el-table-column prop="programV" label="程式版號" min-width="100">
         </el-table-column>
-        <el-table-column prop="EmpName" label="SVN版號" min-width="100">
+        <el-table-column prop="SVNV" label="SVN版號" min-width="100">
         </el-table-column>
         <el-table-column prop="EmpName" label="申請人員" min-width="100">
         </el-table-column>
-        <el-table-column prop="Status" label="表單狀態" min-width="100">
+        <el-table-column prop="status" label="表單狀態" min-width="100">
         </el-table-column>
         <el-table-column prop="NextSIGNER" label="待簽人員" min-width="150">
         </el-table-column>
@@ -97,12 +97,13 @@
 </template>
 
 <script setup lang="ts">
+import { type AxiosResponse } from 'axios';
 import { defineAsyncComponent, onMounted, ref, watch, } from 'vue';
 import { useRoute, useRouter, RouterLink } from "vue-router"
 import { storeToRefs } from 'pinia';
 import { resError, Toast } from '@/utils/base';
 import { GetEmpGroup } from '@/apis/baseAPI.js'
-import { GetEGAList } from '@/apis/getListAPI.js'
+import { GetRDDList } from '@/apis/getListAPI.js'
 // 引入baseStore
 import { baseStore } from '@/stores/baseStore';
 // 引入userStore
@@ -116,7 +117,7 @@ console.log("網址", url);
 
 // TODO:本地測試用 => 設定 路由query的方法，上線要註解
 const route = useRoute();
-route.query.Empid = "222010"
+route.query.Empid = "208056"
 const userId = route.query.Empid
 
 // TODO:上線用 => 設定 路由query的方法，上線要打開
@@ -156,7 +157,7 @@ const dataState = ref({
     },
   ],
   statusValue: "",
-  searchResult: [] as ResEGAList[] | any,
+  searchResult: [] as ResRDDList[],
   // 查詢list時候，人員限制
   searchLimit: "",
   // 會變動的資料
@@ -165,8 +166,8 @@ const dataState = ref({
     routeSign: "cloudSoft-sign",
     signPath: "/cloudSoft/sign/",
     createPath: "/cloudSoft/create/",
-    searchFormsAPI: "GetEGAList",
-    id: "EGAId",
+    searchFormsAPI: "GetRDDList",
+    id: "RDDID",
   },
 })
 
@@ -218,10 +219,9 @@ async function changePersons(DeptId: string) {
 // 查詢表單
 async function searchFormList() {
   dataState.value.runningCount++;
-  await GetEGAList(
+  await GetRDDList(
     {
       Formno: "", // 送單號
-      Name: "", // 送專案名稱
       status: dataState.value.statusValue, //狀態
       Coid: "", //公司代號
       DeptId: dataState.value.branchValue, //部門代號
@@ -230,9 +230,9 @@ async function searchFormList() {
       Createid: dataState.value.searchLimit,//原本填this.personValue
       type: "0",
     }
-  ).then((response: ResEGAList[]) => {
+  ).then((response: AxiosResponse<ResRDDList[]>) => {
     // console.log("搜尋到的資料", response);
-    if (response == null) {
+    if (response.data == null) {
       Toast.fire({
         icon: "warning",
         title: "此條件查無資料！",
@@ -240,14 +240,14 @@ async function searchFormList() {
     } else {
       // 判斷如果 搜尋欄位(申請人員)personValue有值，要過濾Empid是否等於personValue
       if (dataState.value.personValue) {
-        dataState.value.searchResult = response.filter((item) => {
+        dataState.value.searchResult = response.data.filter((item: any) => {
           if (item.Empid === dataState.value.personValue) {
             item.CreateDate = item.CreateDate.split(" ")[0];
             return item
           }
         });
       } else {
-        dataState.value.searchResult = response.map((item) => {
+        dataState.value.searchResult = response.data.map((item: any) => {
           item.CreateDate = item.CreateDate.split(" ")[0];
           return item
         });
@@ -264,16 +264,16 @@ async function searchFormList() {
 async function searchNotSign(id: string) {
   console.log("有抓到使用者id", id);
   dataState.value.runningCount++;
-  await GetEGAList({
-    Status: "1", //狀態
+  await GetRDDList({
+    status: "1", //狀態
     type: "0",
-  }).then((response: ResEGAList[]) => {
+  }).then((response: AxiosResponse<ResRDDList[]>) => {
     console.log("所有尚未簽核資料", response);
 
-    if (response == null) {
+    if (response.data == null) {
       console.log("目前無待簽核表單");
     } else {
-      dataState.value.searchResult = response.filter((item) => {
+      dataState.value.searchResult = response.data.filter((item: any) => {
         item.CreateDate = item.CreateDate.split(" ")[0];
         return item.SIGNER == id
       });
@@ -285,7 +285,7 @@ async function searchNotSign(id: string) {
   }).catch((error: any) => {
     dataState.value.runningCount--;
     console.log(error)
-    resError("查詢表單發生錯誤" + error)
+    resError("查詢待簽核表單發生錯誤" + error)
   })
 }
 
@@ -296,9 +296,9 @@ async function limitSearchForm(userId: string) {
     GroupID: "",
     EmpId: userId, //工號
   })
-    .then((response: ResEmpGroup[]) => {
-      console.log("人員群組", response);
-      const person = response;
+    .then((response: AxiosResponse<ResEmpGroup[]>) => {
+      console.log("人員群組", response.data);
+      const person = response.data;
       // 判斷可以查詢全部資料的人員，searchLimit帶空字串
       for (let p of person) {
         if (p.GroupID === "admin" || p.EmpId === "222010") {
@@ -312,7 +312,8 @@ async function limitSearchForm(userId: string) {
 }
 // 跳至簽核頁面
 function clickRow(row: any) {
-  // console.log(row[dataState.formAllData.id]);
+  console.log(`${dataState.value.formAllData.signPath}${row[dataState.value.formAllData.id]}/${userId
+    }`);
   router.push(
     `${dataState.value.formAllData.signPath}${row[dataState.value.formAllData.id]}/${userId
     }`

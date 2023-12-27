@@ -1,3 +1,4 @@
+import { type AxiosResponse } from 'axios';
 import { defineStore } from 'pinia';
 import { resError } from '@/utils/base';
 import { GetSignStepNext, MailSend } from '@/apis/baseAPI.js';
@@ -6,15 +7,15 @@ export const createStore = defineStore('createStore', {
   state: () => ({
     createStoreData: {
       // 下一個簽核人員
-      nextSigner: {} as ResNextSigner,
+      nextSigner: {} as ResSigner,
     },
   }),
   actions: {
     // create頁面-取簽核人員，發信使用
     async fetchNextSigner(inputData: any) {
-      await GetSignStepNext(inputData.formId).then(async (response: any) => {
-        this.createStoreData.nextSigner = response[0]
-        console.log("actions 取到簽核人員：", this.createStoreData.nextSigner);
+      await GetSignStepNext(inputData.formId).then(async (response: AxiosResponse<ResSigner[]>) => {
+        this.createStoreData.nextSigner = response.data[0]
+        console.log("createStore 取到簽核人員：", this.createStoreData.nextSigner);
       }).catch((error: any) => {
         console.log(error)
         resError("API取簽核人員發生錯誤" + error)

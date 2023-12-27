@@ -1,8 +1,8 @@
 import request from '@/utils/request';
 
-export function GetEGAList(data) {
+export function GetRDDList(data: GetList) {
   return request({
-    url: '/GetEGAList',
+    url: '/GetRDDList',
     method: 'post',
     data,
   });
