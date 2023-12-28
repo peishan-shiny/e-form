@@ -112,3 +112,12 @@ export function SignStepupdate(data) {
         data,
     });
 }
+
+// 增加會簽人員
+export function CountersignAdd(data) {
+    return request({
+        url: `/CountersignAdd`,
+        method: 'post',
+        data,
+    });
+}

@@ -1,11 +1,12 @@
 <template>
   <div class="content">
     <LoadingGIF v-if="dataState.isLoading === true" />
-    <SignBox v-if="dataState.showSignBox === 1" @handle-show-sign-box="handleShowSignBox"
-      @deliver-disabled-btn="deliverDisabledBtn" @submit-sign="submitSign" :formContent="dataState.formContent"
-      :formAllData="dataState.formAllData" />
+
+    <SignBox v-if="dataState.showSignBox === 1" @handle-show-sign-box="handleShowSignBox" @submit-sign="submitSign" />
+
     <CountersignBox v-if="dataState.showCountersignBox === 1" @handle-show-countersign-box="handleShowCountersignBox"
-      @deliver-disabled-btn="deliverDisabledBtn" :formAllData="dataState.formAllData" />
+      @submit-countersign="submitCountersign" :formAllData="dataState.formAllData" />
+
     <VoidBox v-if="dataState.showVoidBox === 1" @handle-show-void-box="handleShowVoidBox"
       @deliver-disabled-btn="deliverDisabledBtn" :formAllData="dataState.formAllData"
       :formContent="dataState.formContent" />
@@ -127,9 +128,9 @@ import { type AxiosResponse } from 'axios';
 import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
-import { resError, pushWaitSignPage, Toast } from '@/utils/base';
+import { resError, Toast, uploadFile, signSuccess, finishSignStatus, noticeSendMail, returnSignStatus, pushWaitSignPage } from '@/utils/base';
 import { GetRDDList } from '@/apis/getListAPI.js'
-import { SignStepupdate, UploadSignFormData, GetSignStepNext, MailSend } from '@/apis/baseAPI.js'
+import { SignStepupdate, CountersignAdd } from '@/apis/baseAPI.js'
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
 const SignBox = defineAsyncComponent(() => import('@/components/SignBox.vue'));
@@ -141,10 +142,13 @@ const FileCom = defineAsyncComponent(() => import('@/components/FileCom.vue'));
 // 引入store
 import { signStore } from '@/stores/signStore'
 import { baseStore } from '@/stores/baseStore'
+import { createStore } from '@/stores/createStore';
 const signStoreConfig = signStore()
 const baseStoreConfig = baseStore()
+const createStoreConfig = createStore()
 const { signStoreData } = storeToRefs(signStoreConfig)
 const { baseStoreData } = storeToRefs(baseStoreConfig)
+const { createStoreData } = storeToRefs(createStoreConfig)
 
 const dataState = ref({
   formId: "" as string | string[],
@@ -161,11 +165,14 @@ const dataState = ref({
   showVoidBox: 0,
   // 控制 簽核完成後按鈕控制 disabled
   disabledBtn: false,
+  // SignBox傳過來的資料
   signModalData: {
     radio: 1,
     password: "",
     opinion: "",
   },
+  // CountersignBox傳過來的資料
+  countersign: [] as SetCountersign[],
   // 傳給 FileCom 的資料
   model: "sign",
   toFileCom: "RDDForm",
@@ -178,20 +185,28 @@ const dataState = ref({
     formName: "軟體申請單",
     webNameForm: "RDDForm",
     webNameSign: "RDDSign",
+    //完簽
     finishSign: {
       RDDId: "" as string | string[], //單號
       Status: "2", //狀態
       Type: "1", //更新狀態
     },
+    //退簽
     returnSign: {
       RDDId: "" as string | string[], //單號
       Status: "3", //狀態
       Type: "1", //更新狀態
     },
+    //作廢
     voidSign: {
       RDDId: "" as string | string[], //單號
       Status: "4", //狀態
       Type: "1", //更新狀態
+    },
+    // 若有確認單類型的要多給clearId，當退簽/作廢時要清除
+    clearId: {
+      RDDId: "", //單號
+      Type: 2, //類別
     },
   },
   // 表單內容
@@ -207,15 +222,20 @@ onMounted(() => {
   dataState.value.formAllData.finishSign.RDDId = route.params.formId;
   dataState.value.formAllData.voidSign.RDDId = route.params.formId;
 
+  // 取部門
+  baseStoreConfig.getBranchData({
+    DeptId: "", //部門代號
+    DeptName: "" //部門名稱
+  })
+  // 取全部人員資料
+  baseStoreConfig.getPersonData({
+    DeptId: "", //部門代號
+    EmpId: "", //工號
+    Company: "", //公司
+  })
   // 取得表單內容
   fetchFormContent(dataState.value.formId);
 })
-
-// computed: {
-//   printSign() {
-//     return this.$store.state.sign.printSign;
-//   },
-// },
 
 // 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
 watch(() => dataState.value.runningCount, (newValue) => {
@@ -274,12 +294,9 @@ async function fetchFormContent(formId: string | string[]) {
       dataState.value.runningCount--;
     })
     .catch((error: any) => {
-      console.log(error, "取得表單內容發生錯誤！");
       dataState.value.runningCount--;
-      Toast.fire({
-        icon: "warning",
-        title: "無法取得資料，請聯絡IT人員！",
-      });
+      console.log(error);
+      resError("API取得表單內容發生錯誤")
     });
 }
 // 送簽
@@ -318,7 +335,7 @@ async function submitSign(data: any) {
         }
         // 如果簽核附件有東西，上傳給後端
         if (baseStoreData.value.file.length > 0) {
-          const result = await uploadFile();
+          const result = await uploadFile(dataState.value);
           // 判斷uploadFile函式，檔案上傳是否成功
           if (result === false) {
             throw "檔案上傳錯誤";
@@ -326,12 +343,30 @@ async function submitSign(data: any) {
         }
       })
       .then(async () => {
-        // 如果簽核-同意，取得下一個簽核人員，發信通知用
+        const inputData = {
+          formId: dataState.value.formId,
+          formName: "軟體申請單",
+        };
+        // 如果簽核-同意，取得下一個簽核人員
         if (dataState.value.signModalData.radio === 1) {
-          await fetchNextSigner(dataState.value.formId);
+          await createStoreConfig.fetchNextSigner(inputData)
+          // 發信給下一個簽核人員
+          if (createStoreData.value.nextSigner) {
+            await createStoreConfig.sendMail(inputData)
+          } else {
+            // 如果沒有下一個簽核人員，代表簽核完成
+            // 須將nextSigner改為空物件，否則在上面this.nextSigner = response.data[0]他已經變成undefined 
+            // 接簽核狀態更新api
+            // dataState.value.nextSigner = {};
+            await finishSignStatus(dataState.value);
+            // 完簽發信通知建表人員
+            await noticeSendMail(dataState.value, '完簽');
+          }
         } else {
           // 如果簽核-不同意，簽核狀態送2退簽
-          await returnSignStatus();
+          await returnSignStatus(dataState.value);
+          // 退簽發信通知建表人員
+          await noticeSendMail(dataState.value, '退簽');
         }
       })
       .then(() => {
@@ -341,11 +376,8 @@ async function submitSign(data: any) {
       })
       .catch((error: any) => {
         dataState.value.runningCount--;
-        Toast.fire({
-          icon: "error",
-          title: "上傳失敗請再試一次",
-        });
         console.log(error);
+        resError("API送簽發生錯誤")
       });
   } else {
     Toast.fire({
@@ -353,5 +385,54 @@ async function submitSign(data: any) {
       title: "若不同意請填寫意見",
     });
   }
+}
+
+// 送出 會簽人員
+async function submitCountersign(data: any) {
+  dataState.value.countersign = data
+  // 先排序
+  dataState.value.countersign.sort(function (a, b) {
+    return a.order - b.order
+  })
+  console.log("排序後", dataState.value.countersign)
+  // 再上傳
+  if (dataState.value.countersign.length > 0) {
+    dataState.value.runningCount++;
+    dataState.value.countersign.forEach((item) => {
+      item.FORMNO = dataState.value.formId.toString();
+      item.SIGNORDER = signStoreData.value.signer.SIGNORDER;
+      item.STEPNAME = "會簽";
+      item.SignGroup = "簽核";
+    });
+
+    CountersignAdd(dataState.value.countersign)
+      .then(async (response: any) => {
+        console.log("新增會簽人員", response);
+        if (response.data === "更新完成") {
+          dataState.value.disabledBtn = true;
+        }
+        const inputData = {
+          formId: dataState.value.formId,
+          formName: "軟體申請單",
+        };
+
+        // 如果會簽有人，取得下一個簽核人員，發信通知用
+        if (dataState.value.countersign.length > 0) {
+          await createStoreConfig.fetchNextSigner(inputData)
+          await createStoreConfig.sendMail(inputData)
+        }
+      })
+      .then(() => {
+        dataState.value.runningCount--;
+        // 跳出成功訊息
+        pushWaitSignPage('RDD')
+      })
+      .catch((error: any) => {
+        dataState.value.runningCount--;
+        console.log(error);
+        resError("API增加會簽人員發生錯誤")
+      });
+  }
+
 }
 </script>

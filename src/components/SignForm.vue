@@ -36,14 +36,14 @@
           }}</label>
         </td>
         <td class="time-value">
-          <span v-if="!(item.SIGNRESULT === 5)">{{ item.SIGNTIME }}</span>
+          <span v-if="!(item.SIGNRESULT === 5)">{{ item.SIGNTIME?.split('T')[0] }}</span>
         </td>
         <td class="suggestion-value">
           {{ !item.OPINION ? " " : item.OPINION }}
         </td>
         <td class="file-value noPrint">
-          <div class="signFile-list" v-if="item.signFile?.length > 0">
-            <a class="downloadURLSign" v-for="fileItem in item.signFile" :key="fileItem.FileName"
+          <div class="signFile-list" v-for="fileItem in signStoreData.signFile" :key="fileItem.FileName">
+            <a class="downloadURLSign" v-if="fileItem.SIGNORDER == item.SIGNORDER"
               @click="downloadFile(fileItem.FilePath)">{{ fileItem.FileName }}
               <button class="common">下載附件</button></a>
           </div>
@@ -91,8 +91,8 @@
           {{ !item.OPINION ? " " : item.OPINION }}
         </td>
         <td class="file-value noPrint">
-          <div class="signFile-list" v-if="item.signFile?.length > 0">
-            <a class="downloadURLSign" v-for="fileItem in item.signFile" :key="fileItem.FileName"
+          <div class="signFile-list" v-for="fileItem in signStoreData.signFile" :key="fileItem.FileName">
+            <a class="downloadURLSign" v-if="fileItem.SIGNORDER == item.SIGNORDER"
               @click="downloadFile(fileItem.FilePath)">{{ fileItem.FileName }}
               <button class="common">下載附件</button></a>
           </div>
@@ -103,9 +103,9 @@
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
+import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { resError, downloadFile } from '@/utils/base';
+import { downloadFile } from '@/utils/base';
 
 // 引入store
 import { signStore } from '@/stores/signStore'

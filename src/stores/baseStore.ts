@@ -26,7 +26,7 @@ export const baseStore = defineStore('baseStore', {
         // console.log("store部門資料", this.baseStoreData.branchs)
       }).catch((error: any) => {
         console.log(error)
-        resError("API拿取部門資料錯誤" + error)
+        resError("API拿取部門資料發生錯誤")
       })
     },
     // 取全公司人員資料
@@ -36,7 +36,7 @@ export const baseStore = defineStore('baseStore', {
         // console.log("store全公司人員資料", this.baseStoreData.allPersons)
       }).catch((error: any) => {
         console.log(error)
-        resError("API拿取人員資料錯誤" + error)
+        resError("API拿取人員資料發生錯誤")
       })
     },
     // 修改 file

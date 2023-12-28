@@ -25,7 +25,7 @@
 
 <script setup lang="ts">
 import { type AxiosResponse } from 'axios';
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
 
@@ -73,7 +73,7 @@ async function fetchGetWFP(formId: string | string[]) {
     console.log("元件FileCom：", dataState.value.fileData);
   }).catch((error: any) => {
     console.log(error)
-    resError("API取原表單附件發生錯誤" + error)
+    resError("API取原表單附件發生錯誤")
   })
 }
 

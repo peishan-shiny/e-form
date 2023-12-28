@@ -163,9 +163,9 @@
 <script setup lang="ts">
 import { type AxiosResponse } from 'axios';
 import Swal from 'sweetalert2'
-import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
+import { defineAsyncComponent, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { resError, pushWaitSignPage, Toast } from '@/utils/base';
+import { resError, pushWaitSignPage } from '@/utils/base';
 import { RDDAdd } from '@/apis/addFormAPI.js';
 import { UploadFormData, GetElno } from '@/apis/baseAPI.js';
 // 引入组件
@@ -417,7 +417,7 @@ async function verifyContent() {
     .catch((error: any) => {
       console.log(error)
       dataState.value.runningCount--;
-      resError("建立表單發生錯誤！" + error)
+      resError("建立表單發生錯誤！")
     })
 }
 
@@ -446,7 +446,7 @@ async function uploadFile() {
     .catch((error: any) => {
       console.log(error)
       dataState.value.runningCount--;
-      resError("附件上傳後端錯誤" + error)
+      resError("附件上傳後端發生錯誤")
       return false;
     })
   if (fileUploadStatus === false) {
@@ -473,7 +473,7 @@ async function fetchModelNO(bomElno: string, type: string) {
     console.log("suzoModelNO", dataState.value.ruleForm.suzoModelNO)
   }).catch((error: any) => {
     console.log(error)
-    resError("取ModelNO發生錯誤" + error)
+    resError("取ModelNO發生錯誤")
   })
 }
 </script>

@@ -31,7 +31,7 @@ export const userStore = defineStore('userStore', {
 				console.log("store使用者資料", this.userStoreData)
 			}).catch((error: any) => {
 				console.log(error)
-				resError("API拿取使用者資料錯誤" + error)
+				resError("API拿取使用者資料發生錯誤")
 			})
 
 		},

@@ -90,7 +90,7 @@ interface ResSigner {
   types: string,
   ExceId: null | any,
   Status: null | any
-  signFile?: any,
+  // signFile?: any,
 }
 
 // 寄信 給後端
@@ -172,6 +172,18 @@ interface ResRDDList {
   SIGNER?: string,
   NextSIGNER?: string,
 }
+
+// 會簽用 
+interface SetCountersign {
+  SIGNERNAME: string,
+  SIGNER: string,
+  order: number,
+  FORMNO: string,
+  SIGNORDER: number | string,
+  STEPNAME: string,
+  SignGroup: string,
+}
+
 
 
 

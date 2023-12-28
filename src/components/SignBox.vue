@@ -48,31 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import Swal from 'sweetalert2'
-import { type AxiosResponse } from 'axios';
-import { useRoute } from "vue-router"
-import { storeToRefs } from 'pinia';
-import { defineAsyncComponent, onMounted, ref, watch, defineEmits } from 'vue';
-import { resError, Toast, createDate } from '@/utils/base';
-import { Login, SignStepupdate, UploadSignFormData, GetSignStepNext, MailSend } from '@/apis/baseAPI.js'
+import { defineAsyncComponent, ref, watch, defineEmits } from 'vue';
+import { resError, Toast, } from '@/utils/base';
+import { Login } from '@/apis/baseAPI.js'
 
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
-// 引入store
-import { signStore } from '@/stores/signStore'
-import { baseStore } from '@/stores/baseStore'
-const signStoreConfig = signStore()
-const baseStoreConfig = baseStore()
-const { signStoreData } = storeToRefs(signStoreConfig)
-const { baseStoreData } = storeToRefs(baseStoreConfig)
-
-// props寫法一：
-const props = defineProps<{
-  formContent: ResRDDList,
-  formAllData: GetformAllData,
-}>()
-
-const emit = defineEmits(['handle-show-sign-box', 'deliver-disabled-btn', 'submit-sign'])
+// 傳至父件
+const emit = defineEmits(['handle-show-sign-box', 'submit-sign'])
 
 const dataState = ref({
   // 送出表單的等待畫面
@@ -88,18 +71,8 @@ const dataState = ref({
     password: "",
     opinion: "",
   },
-  // 表單號碼
-  formId: "" as any,
-})
-
-onMounted(() => {
-  // 取路由上的 單號/使用者
-  const route = useRoute();
-  console.log("route", route.params)
-  dataState.value.formId = route.params.formId
 
 })
-
 
 // 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
 watch(() => dataState.value.runningCount, (newValue) => {
@@ -117,6 +90,7 @@ watch(() => dataState.value.showSignBox, (newValue) => {
 
 // 驗證 密碼
 async function confirmPassword() {
+  dataState.value.disabledBtn = true
   if (dataState.value.signModalData.password) {
     await Login({
       acc: "222010", //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 signStoreData.value.signer.SIGNER
@@ -128,8 +102,9 @@ async function confirmPassword() {
         }
       })
       .catch((error: any) => {
+        dataState.value.disabledBtn = false
         console.log(error)
-        resError("密碼錯誤" + error)
+        resError("密碼錯誤")
       })
   } else {
     Toast.fire({
@@ -139,8 +114,6 @@ async function confirmPassword() {
   }
 }
 
-
-
 // 點黑底，取消modal
 function cancelModal(event: any) {
   const modal = document.querySelector(".sign-modal");
@@ -149,202 +122,6 @@ function cancelModal(event: any) {
   }
 }
 
-
-// 上傳附件給後端
-async function uploadFile() {
-  if (baseStoreData.value.file.length === 0) return true;
-  // shift() 用法 => 會把file陣列裡的第一個拿出來，且會改變原本陣列detailFile會刪除第一個
-  const uploadDFileCurrent = baseStoreData.value.file.shift();
-  console.log("uploadDFileCurrent", uploadDFileCurrent);
-
-  let formData = new FormData();
-  formData.append("file", uploadDFileCurrent);
-  formData.append("FileName", uploadDFileCurrent.name);
-  formData.append("FormId", dataState.value.formId);
-  formData.append("EmpId", signStoreData.value.signer.SIGNER);
-  formData.append("WebName", props.formAllData.webNameSign);
-  formData.append("SIGNORDER", signStoreData.value.signer.SIGNORDER);
-  dataState.value.runningCount++;
-  // fileUploadStatus記錄上傳檔案成功或失敗
-  const fileUploadStatus = await UploadSignFormData(formData)
-    .then((response: any) => {
-      console.log("簽核附件上傳後端", response);
-      dataState.value.runningCount--;
-      return true;
-    })
-    .catch((error: any) => {
-      dataState.value.runningCount--;
-      console.log("簽核附件上傳後端error", error);
-      Toast.fire({
-        icon: "error",
-        title: "附件上傳失敗請再試一次或聯絡IT人員",
-      });
-      return false;
-    });
-  if (fileUploadStatus === false) {
-    return false;
-  }
-  // 過一秒後再執行一次，直到detailFile長度為0
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(uploadFile());
-    }, 1000);
-  });
-}
-// 簽核完成，取得 下一個簽核人員，發信通知使用
-async function fetchNextSigner(formId: any) {
-  dataState.value.runningCount++;
-  await GetSignStepNext(formId)
-    .then(async (response: AxiosResponse<ResSigner[]>) => {
-      // dataState.value.nextSigner = {};
-      dataState.value.nextSigner = response.data[0];
-      console.log("下一個簽核人員", dataState.value.nextSigner);
-      dataState.value.runningCount--;
-
-      //發信給下一個簽核人員
-      if (dataState.value.nextSigner) {
-        await sendMail();
-      } else {
-        // 如果沒有下一個簽核人員，代表簽核完成
-        // 須將nextSigner改為空物件，否則在上面this.nextSigner = response.data[0]他已經變成undefined 
-        // 接簽核狀態更新api
-        // dataState.value.nextSigner = {};
-        await finishSignStatus();
-      }
-    })
-    .catch((error: any) => {
-      console.log(error, "取得簽核人員發生錯誤！");
-      dataState.value.runningCount--;
-      Toast.fire({
-        icon: "warning",
-        title: "無法取得資料，請聯絡IT人員！",
-      });
-    });
-}
-// 接發信api
-async function sendMail() {
-  dataState.value.runningCount++;
-  await MailSend({
-    Empid: dataState.value.nextSigner.SIGNER, //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 dataState.value.nextSigner.SIGNER
-    Sub: `簽核通知：${props.formAllData.formName}，表單號碼：${dataState.value.formId}`, //主旨
-    Messg: `
-          請協助進行表單號碼：${dataState.value.formId} 簽核作業！
-          可點選網址查看，https://esys.orange-electronic.com/Eform/List`, //內文 上架更改內容
-  })
-    .then((response: any) => {
-      console.log("發信", response);
-      dataState.value.runningCount--;
-    })
-    .catch((error: any) => {
-      console.log("發信-error", error);
-      dataState.value.runningCount--;
-    });
-}
-// 更新簽核狀態 - 完簽
-async function finishSignStatus() {
-  dataState.value.runningCount++;
-  await addFormAPI[props.formAllData.updateFormsAPI](props.formAllData.finishSign).then(async (response: any) => {
-    console.log("更新簽核狀態-完簽", response);
-
-    // 完簽發信通知建表人員
-    await finishSignSendMail();
-
-    dataState.value.runningCount--;
-  }).catch((error: any) => {
-    dataState.value.runningCount--;
-    console.log("更新簽核狀態-完簽-error", error);
-  });
-}
-// 完簽接發信api 通知建表人員
-async function finishSignSendMail() {
-  dataState.value.runningCount++;
-  await MailSend({
-    Empid: props.formContent.Empid, //TODO:工號，先代自己工號，上架改成 建表人員 props.formContent.Empid
-    Sub: `完簽通知：${props.formAllData.formName}，表單號碼：${dataState.value.formId}`, //主旨
-    Messg: `
-          可點選網址查看，https://esys.orange-electronic.com/RDDocument/Detail?webId=${props.formAllData.formCodeName}&formN=${props.formAllData.formCodeName2}&formId=${dataState.value.formId}`, //直接跳到簽核頁面 上架更改內容
-
-    // 表單列表頁面
-    // https://esys.orange-electronic.com/RDDocument/Index?id=${props.formAllData.formCodeName}&formN=index
-  })
-    .then((response: any) => {
-      console.log("完簽發信", response);
-      dataState.value.runningCount--;
-    })
-    .catch((error: any) => {
-      console.log("發信-error", error);
-      dataState.value.runningCount--;
-    });
-}
-// 更新簽核狀態 - 退簽
-async function returnSignStatus() {
-  dataState.value.runningCount++;
-  await addFormAPI[props.formAllData.updateFormsAPI](props.formAllData.returnSign).then(async (response) => {
-    console.log("更新簽核狀態-退簽", response);
-
-    // 如果有確認單的 會多跑這個程序
-    if (props.formAllData.clearId) {
-      await this.cleanFormId();
-    }
-
-    // 發信通知建表人員
-    await this.sendMailCreater();
-
-    dataState.value.runningCount--;
-  }).catch((error) => {
-    dataState.value.runningCount--;
-    console.log("更新簽核狀態-退簽-error", error);
-  });
-}
-// 若有確認單 需清除 連結的申請單單號
-async function cleanFormId() {
-  dataState.value.runningCount++;
-  await addFormAPI[props.formAllData.updateFormsAPI](props.formAllData.clearId).then(async (response) => {
-    console.log("退簽清除", response);
-
-    dataState.value.runningCount--;
-  }).catch((error) => {
-    dataState.value.runningCount--;
-    console.log("更新簽核狀態-退簽-error", error);
-  });
-}
-// 退簽接發信api 通知建表人員
-async function sendMailCreater() {
-  dataState.value.runningCount++;
-  await MailSend({
-    Empid: props.formContent.Empid, //TODO:工號，先代自己工號，上架改成 建表人員 props.formContent.Empid
-    Sub: `退簽通知：${props.formAllData.formName}，表單號碼：${dataState.value.formId}`, //主旨
-    Messg: `
-          可點選網址查看，https://esys.orange-electronic.com/RDDocument/Detail?webId=${props.formAllData.formCodeName}&formN=${props.formAllData.formCodeName2}&formId=${dataState.value.formId}`, //直接跳到簽核頁面 上架更改內容
-
-    // 表單列表頁面
-    // https://esys.orange-electronic.com/RDDocument/Index?id=${props.formAllData.formCodeName}&formN=index
-  })
-    .then((response: any) => {
-      console.log("發信", response);
-      dataState.value.runningCount--;
-    })
-    .catch((error: any) => {
-      console.log("發信-error", error);
-      dataState.value.runningCount--;
-    });
-}
-// 成功 彈跳視窗，並轉跳至待簽核表單
-function signSuccess() {
-  Swal.fire({
-    title: "成功送出",
-    text: `下一個簽核人員：${Object.keys(dataState.value.nextSigner).length === 0 ? '無' : dataState.value.nextSigner?.SIGNERNAME}`,
-    confirmButtonColor: "#333",
-    confirmButtonText: "確認",
-  }).then((resule: any) => {
-    console.log(resule);
-    if (resule.value) {
-      // TODO:上線下面這行打開，第2行註解
-      window.top.location = "https://esys.orange-electronic.com/Eform/List";
-      // this.$router.push(`${props.formAllData.routeList}`);
-    }
-  });
-}
 </script>
 
 <style lang="scss" scoped>

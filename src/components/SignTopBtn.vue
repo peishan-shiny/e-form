@@ -193,7 +193,7 @@ async function voidLimit() {
     .catch((error: any) => {
       dataState.value.runningCount--;
       console.log(error)
-      resError("判斷是否有作廢權" + error)
+      resError("API判斷是否有作廢權發生錯誤")
     })
 }
 // 送簽

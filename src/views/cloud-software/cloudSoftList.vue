@@ -103,7 +103,7 @@ import { useRoute, useRouter, RouterLink } from "vue-router"
 import { storeToRefs } from 'pinia';
 import { resError, Toast } from '@/utils/base';
 import { GetEmpGroup } from '@/apis/baseAPI.js'
-import { GetRDDList } from '@/apis/getListAPI.js'
+import { GetRDDList } from '@/apis/getListAPI'
 // 引入baseStore
 import { baseStore } from '@/stores/baseStore';
 // 引入userStore
@@ -117,7 +117,7 @@ console.log("網址", url);
 
 // TODO:本地測試用 => 設定 路由query的方法，上線要註解
 const route = useRoute();
-route.query.Empid = "208056"
+route.query.Empid = "218011"
 const userId = route.query.Empid
 
 // TODO:上線用 => 設定 路由query的方法，上線要打開
@@ -257,7 +257,7 @@ async function searchFormList() {
   }).catch((error: any) => {
     dataState.value.runningCount--;
     console.log(error)
-    resError("查詢表單發生錯誤" + error)
+    resError("查詢表單發生錯誤")
   })
 }
 // 查詢使用者 待簽核表單
@@ -285,7 +285,7 @@ async function searchNotSign(id: string) {
   }).catch((error: any) => {
     dataState.value.runningCount--;
     console.log(error)
-    resError("查詢待簽核表單發生錯誤" + error)
+    resError("查詢待簽核表單發生錯誤")
   })
 }
 

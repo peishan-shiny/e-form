@@ -14,6 +14,8 @@ export const signStore = defineStore('signStore', {
       executorStep: [] as ResSigner[],
       // 全部簽核人員(製表/簽核/會辦/核准/會簽)
       allSign: [] as ResSigner[],
+      // 簽核附件
+      signFile: [] as ResSignFile[]
     },
   }),
   actions: {
@@ -24,7 +26,7 @@ export const signStore = defineStore('signStore', {
         console.log("signStore 取到簽核人員：", this.signStoreData.signer);
       }).catch((error: any) => {
         console.log(error)
-        resError("API取簽核人員發生錯誤" + error)
+        resError("API取簽核人員發生錯誤")
       })
     },
     // 取簽核順序
@@ -32,10 +34,11 @@ export const signStore = defineStore('signStore', {
       await GetSignStep(inputData.formId).then(async (response: AxiosResponse<ResSigner[]>) => {
         this.signStoreData.allSign = response.data
         console.log("signStore 取到簽核順序：", this.signStoreData.allSign);
+        this.sortSignStep()
         await this.fetchGetSignWFP(inputData)
       }).catch((error: any) => {
         console.log(error)
-        resError("API取簽核順序發生錯誤" + error)
+        resError("API取簽核順序發生錯誤")
       })
     },
     // 取簽核附件
@@ -49,26 +52,19 @@ export const signStore = defineStore('signStore', {
         ExecID: "",
         SIGNORDER: "",//簽核順序
       }).then(async (response: AxiosResponse<ResSignFile[]>) => {
-        const signFile = response.data
-        this.addSignStep(signFile)
-        console.log("signStore 簽核附件：", signFile);
+        this.signStoreData.signFile = response.data
+        console.log("signStore 簽核附件：", this.signStoreData.signFile);
       }).catch((error: any) => {
         console.log(error)
-        resError("API取簽核順序發生錯誤" + error)
+        resError("API取簽核附件發生錯誤")
       })
     },
-    // 將簽核附件加入signStep
-    addSignStep(signFile: ResSignFile[]) {
+    // 排列簽核順序
+    sortSignStep() {
       const arr = this.signStoreData.allSign
       // 退簽的位址
       const returnSignIndex = [] as number[]
       arr.forEach((item, index) => {
-        for (let i = 0; i < signFile.length; i++) {
-          if (item.SIGNORDER === parseInt(signFile[i].SIGNORDER)) {
-            item.signFile.push(signFile[i]);
-          }
-        }
-
         // 判斷是否有退簽的人，SIGNRESULT === 2(不同意)
         if (item.SIGNRESULT === 2) {
           returnSignIndex.push(index)
@@ -80,7 +76,6 @@ export const signStore = defineStore('signStore', {
         console.log("有進入更改");
         for (let i = returnSignIndex[0] + 1; i < arr.length; i++) {
           arr[i].SIGNRESULT = 5
-          // arr[i].signDate = ""
           arr[i].OPINION = ""
         }
       }
