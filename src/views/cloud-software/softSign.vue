@@ -5,11 +5,10 @@
     <SignBox v-if="dataState.showSignBox === 1" @handle-show-sign-box="handleShowSignBox" @submit-sign="submitSign" />
 
     <CountersignBox v-if="dataState.showCountersignBox === 1" @handle-show-countersign-box="handleShowCountersignBox"
-      @submit-countersign="submitCountersign" :formAllData="dataState.formAllData" />
+      @submit-countersign="submitCountersign" />
 
     <VoidBox v-if="dataState.showVoidBox === 1" @handle-show-void-box="handleShowVoidBox"
-      @deliver-disabled-btn="deliverDisabledBtn" :formAllData="dataState.formAllData"
-      :formContent="dataState.formContent" />
+      @deliver-disabled-btn="deliverDisabledBtn" @submit-void="submitVoid" />
 
     <div class="sign-form noPrint">
       <p class="title">軟體申請單</p>
@@ -128,7 +127,7 @@ import { type AxiosResponse } from 'axios';
 import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
-import { resError, Toast, uploadFile, signSuccess, finishSignStatus, noticeSendMail, returnSignStatus, pushWaitSignPage } from '@/utils/base';
+import { resError, uploadFile, signSuccess, finishSignStatus, noticeSendMail, returnSignStatus, voidSignStatus, pushWaitSignPage, updateSignPerson2, updateSignPerson } from '@/utils/base';
 import { GetRDDList } from '@/apis/getListAPI.js'
 import { SignStepupdate, CountersignAdd } from '@/apis/baseAPI.js'
 // 引入组件
@@ -140,12 +139,15 @@ const SignTopBtn = defineAsyncComponent(() => import('@/components/SignTopBtn.vu
 const SignForm = defineAsyncComponent(() => import('@/components/SignForm.vue'));
 const FileCom = defineAsyncComponent(() => import('@/components/FileCom.vue'));
 // 引入store
+import { userStore } from '@/stores/userStore'
 import { signStore } from '@/stores/signStore'
 import { baseStore } from '@/stores/baseStore'
 import { createStore } from '@/stores/createStore';
+const userStoreConfig = userStore()
 const signStoreConfig = signStore()
 const baseStoreConfig = baseStore()
 const createStoreConfig = createStore()
+const { userStoreData } = storeToRefs(userStoreConfig)
 const { signStoreData } = storeToRefs(signStoreConfig)
 const { baseStoreData } = storeToRefs(baseStoreConfig)
 const { createStoreData } = storeToRefs(createStoreConfig)
@@ -179,8 +181,8 @@ const dataState = ref({
   // 傳給 SignBox 的資料
   formAllData: {
     formCodeName: "RDD",
-    formCodeName2: "cloudSoft",
-    routeList: "/cloudSoft",
+    formCodeName2: "soft",
+    routeList: "/soft",
     updateFormsAPI: "RDDAdd",
     formName: "軟體申請單",
     webNameForm: "RDDForm",
@@ -302,89 +304,79 @@ async function fetchFormContent(formId: string | string[]) {
 // 送簽
 async function submitSign(data: any) {
   dataState.value.signModalData = data
-  if (
-    (dataState.value.signModalData.radio === 1 && dataState.value.signModalData.password) ||
-    (dataState.value.signModalData.radio === 2 && dataState.value.signModalData.opinion !== "")
-  ) {
-    dataState.value.runningCount++;
-    await SignStepupdate({
-      FORMNO: dataState.value.formId, //表單單號
-      SIGNORDER: signStoreData.value.signer.SIGNORDER, //簽核順序
-      STEPNAME: signStoreData.value.signer.STEPNAME, //簽核職稱
-      SIGNER: signStoreData.value.signer.SIGNER, //簽核人員代號
-      SIGNERNAME: signStoreData.value.signer.SIGNERNAME, //簽核人員名稱
-      ACTUALNAME: signStoreData.value.signer.ACTUALNAME, //實際簽核人員名稱(EX: 假如財務請假，就會請財務代理人簽核
-      ACTUALSIGNER: signStoreData.value.signer.ACTUALSIGNER, //實際簽核人員代號 是否簽核 未簽核回傳: ""
-      SIGNRESULT: dataState.value.signModalData.radio, //簽核結果 1: 同意, 0: 未簽核, 3: 退簽 , 4: 作廢
-      OPINION: dataState.value.signModalData.opinion, //簽核意見
-      SIGNTIME: "", //簽核時間
-      ALLOWCUSTOM: signStoreData.value.signer.ALLOWCUSTOM, //是否自訂簽核
-      SignGroup: signStoreData.value.signer.SignGroup, //簽核群組
-      ISEnable: signStoreData.value.signer.ISEnable, //是否顯示
-      types: 1, //1修改
-      ExceId: dataState.value.formContent.CreateId
-        ? dataState.value.formContent.CreateId
-        : dataState.value.formContent.Empid, //建立人
-      Status: "",
-    })
-      .then(async (response: any) => {
-        console.log("簽核成功", response);
+  dataState.value.runningCount++;
+  await SignStepupdate({
+    FORMNO: dataState.value.formId, //表單單號
+    SIGNORDER: signStoreData.value.signer.SIGNORDER, //簽核順序
+    STEPNAME: signStoreData.value.signer.STEPNAME, //簽核職稱
+    SIGNER: signStoreData.value.signer.SIGNER, //簽核人員代號
+    SIGNERNAME: signStoreData.value.signer.SIGNERNAME, //簽核人員名稱
+    ACTUALNAME: signStoreData.value.signer.ACTUALNAME, //實際簽核人員名稱(EX: 假如財務請假，就會請財務代理人簽核
+    ACTUALSIGNER: signStoreData.value.signer.ACTUALSIGNER, //實際簽核人員代號 是否簽核 未簽核回傳: ""
+    SIGNRESULT: dataState.value.signModalData.radio, //簽核結果 1: 同意, 0: 未簽核, 3: 退簽 , 4: 作廢
+    OPINION: dataState.value.signModalData.opinion, //簽核意見
+    SIGNTIME: "", //簽核時間
+    ALLOWCUSTOM: signStoreData.value.signer.ALLOWCUSTOM, //是否自訂簽核
+    SignGroup: signStoreData.value.signer.SignGroup, //簽核群組
+    ISEnable: signStoreData.value.signer.ISEnable, //是否顯示
+    types: 1, //1修改
+    ExceId: dataState.value.formContent.CreateId
+      ? dataState.value.formContent.CreateId
+      : dataState.value.formContent.Empid, //建立人
+    Status: "",
+  })
+    .then(async (response: any) => {
+      console.log("簽核成功", response);
 
-        if (response.data === "更新完成") {
-          dataState.value.disabledBtn = true;
+      if (response.data === "更新完成") {
+        dataState.value.disabledBtn = true;
+      }
+      // 如果簽核附件有東西，上傳給後端
+      if (baseStoreData.value.file.length > 0) {
+        const result = await uploadFile(dataState.value);
+        // 判斷uploadFile函式，檔案上傳是否成功
+        if (result === false) {
+          throw "檔案上傳錯誤";
         }
-        // 如果簽核附件有東西，上傳給後端
-        if (baseStoreData.value.file.length > 0) {
-          const result = await uploadFile(dataState.value);
-          // 判斷uploadFile函式，檔案上傳是否成功
-          if (result === false) {
-            throw "檔案上傳錯誤";
-          }
-        }
-      })
-      .then(async () => {
-        const inputData = {
-          formId: dataState.value.formId,
-          formName: "軟體申請單",
-        };
-        // 如果簽核-同意，取得下一個簽核人員
-        if (dataState.value.signModalData.radio === 1) {
-          await createStoreConfig.fetchNextSigner(inputData)
-          // 發信給下一個簽核人員
-          if (createStoreData.value.nextSigner) {
-            await createStoreConfig.sendMail(inputData)
-          } else {
-            // 如果沒有下一個簽核人員，代表簽核完成
-            // 須將nextSigner改為空物件，否則在上面this.nextSigner = response.data[0]他已經變成undefined 
-            // 接簽核狀態更新api
-            // dataState.value.nextSigner = {};
-            await finishSignStatus(dataState.value);
-            // 完簽發信通知建表人員
-            await noticeSendMail(dataState.value, '完簽');
-          }
+      }
+    })
+    .then(async () => {
+      const inputData = {
+        formId: dataState.value.formId,
+        formName: "軟體申請單",
+      };
+      // 如果簽核-同意，取得下一個簽核人員
+      if (dataState.value.signModalData.radio === 1) {
+        await createStoreConfig.fetchNextSigner(inputData)
+        // 發信給下一個簽核人員
+        if (createStoreData.value.nextSigner) {
+          await createStoreConfig.sendMail(inputData)
         } else {
-          // 如果簽核-不同意，簽核狀態送2退簽
-          await returnSignStatus(dataState.value);
-          // 退簽發信通知建表人員
-          await noticeSendMail(dataState.value, '退簽');
+          // 如果沒有下一個簽核人員，代表簽核完成
+          // 須將nextSigner改為空物件，否則在上面nextSigner = response.data[0]他已經變成undefined 
+          // 接簽核狀態更新api
+          createStoreData.value.nextSigner = {} as ResSigner;
+          await finishSignStatus(dataState.value);
+          // 完簽發信通知建表人員
+          await noticeSendMail(dataState.value, '完簽');
         }
-      })
-      .then(() => {
-        dataState.value.runningCount--;
-        // 跳出成功訊息
-        signSuccess();
-      })
-      .catch((error: any) => {
-        dataState.value.runningCount--;
-        console.log(error);
-        resError("API送簽發生錯誤")
-      });
-  } else {
-    Toast.fire({
-      icon: "warning",
-      title: "若不同意請填寫意見",
+      } else {
+        // 如果簽核-不同意，簽核狀態送2退簽
+        await returnSignStatus(dataState.value);
+        // 退簽發信通知建表人員
+        await noticeSendMail(dataState.value, '退簽');
+      }
+    })
+    .then(() => {
+      dataState.value.runningCount--;
+      // 跳出成功訊息
+      signSuccess();
+    })
+    .catch((error: any) => {
+      dataState.value.runningCount--;
+      console.log(error);
+      resError("API送簽發生錯誤")
     });
-  }
 }
 
 // 送出 會簽人員
@@ -425,7 +417,7 @@ async function submitCountersign(data: any) {
       .then(() => {
         dataState.value.runningCount--;
         // 跳出成功訊息
-        pushWaitSignPage('RDD')
+        signSuccess();
       })
       .catch((error: any) => {
         dataState.value.runningCount--;
@@ -434,5 +426,54 @@ async function submitCountersign(data: any) {
       });
   }
 
+}
+
+// 送出 作廢
+async function submitVoid(data: any) {
+  dataState.value.signModalData = data
+  // 上傳作廢人員名單給後端
+  dataState.value.runningCount++;
+  const addSigner = []
+  addSigner.push({
+    FORMNO: dataState.value.formId,
+    SIGNER: userStoreData.value.EmpId,
+    SIGNERNAME: userStoreData.value.EmpName,
+    SIGNORDER: signStoreData.value.signer.SIGNORDER,
+    STEPNAME: "作廢人員",
+    SignGroup: "作廢",
+  })
+  await CountersignAdd(addSigner)
+    .then((response: any) => {
+      console.log("作廢人員上傳後端", response);
+
+      if (response.data === "更新完成") {
+        dataState.value.disabledBtn = true;
+      }
+
+    }).then(async () => {
+      const inputData = {
+        formId: dataState.value.formId,
+        formName: "軟體申請單",
+      };
+      await signStoreConfig.fetchSignStep(inputData)
+      await voidSignStatus(dataState.value)
+
+      // 更新簽核程序的狀態 => 必須先送作廢的人，再送其他人
+      await updateSignPerson2(dataState.value)
+      await updateSignPerson(dataState.value)
+      // 作廢發信通知建表人員
+      await noticeSendMail(dataState.value, '作廢');
+
+    })
+    .then(() => {
+      dataState.value.runningCount--;
+      // 跳出成功訊息
+      pushWaitSignPage('RDD')
+    })
+    .catch((error: any) => {
+      dataState.value.runningCount--;
+      console.log(error);
+      resError("API新增作廢人員發生錯誤")
+    });
 }
 </script>

@@ -1,6 +1,5 @@
 <template>
   <div class="countersign-box">
-    <LoadingGIF v-if="dataState.isLoading === true" />
     <!-- 會簽 彈跳視窗 -->
     <div class="countersign-modal" @click="cancelModal">
       <div class="box">
@@ -48,8 +47,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { defineAsyncComponent, ref, watch, defineEmits } from 'vue';
-// 引入组件
-const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
 // 引入store
 import { baseStore } from '@/stores/baseStore'
 const baseStoreConfig = baseStore()
@@ -59,10 +56,6 @@ const { baseStoreData } = storeToRefs(baseStoreConfig)
 const emit = defineEmits(['handle-show-countersign-box', 'submit-countersign'])
 
 const dataState = ref({
-  // 送出表單的等待畫面
-  isLoading: false,
-  // 計數api有幾個在執行
-  runningCount: 0,
   showCountersignBox: 1,
   // 簽核完成將確認鈕 disabled
   disabledBtn: false,
@@ -71,15 +64,6 @@ const dataState = ref({
   // 被選中的會簽人員
   countersign: [] as SetCountersign[],
   countersignValue: [] as string[],
-})
-
-// 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
-watch(() => dataState.value.runningCount, (newValue) => {
-  console.log("watch", newValue)
-  dataState.value.isLoading = true;
-  if (dataState.value.runningCount === 0) {
-    dataState.value.isLoading = false;
-  }
 })
 
 watch(() => dataState.value.showCountersignBox, (newValue) => {
@@ -130,70 +114,6 @@ function submitCountersign() {
   emit('submit-countersign', dataState.value.countersign)
 }
 
-// 簽核完成，取得 下一個簽核人員，發信通知使用
-// async fetchNextSigner(formId) {
-//   this.runningCount++;
-//   await baseAPI
-//     .getSignStepNext(formId)
-//     .then(async (response) => {
-//       this.nextSigner = {};
-//       this.nextSigner = response.data[0];
-//       console.log("下一個簽核人員", this.nextSigner);
-//       this.runningCount--;
-
-//       //發信給下一個簽核人員
-//       if (this.nextSigner) {
-//         await this.sendMail();
-//       } else {
-//         //如果沒有下一個簽核人員，代表簽核完成，接簽核狀態更新api
-//         await this.finishSignStatus();
-//       }
-//     })
-//     .catch((error) => {
-//       console.log(error, "取得簽核人員發生錯誤！");
-//       this.runningCount--;
-//       Toast.fire({
-//         icon: "warning",
-//         title: "無法取得資料，請聯絡IT人員！",
-//       });
-//     });
-// },
-// 接發信api
-// async sendMail() {
-//   this.runningCount++;
-//   await baseAPI
-//     .mailSend({
-//       Empid: this.nextSigner.SIGNER, //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 this.nextSigner.SIGNER
-//       Sub: `簽核通知：${this.formAllData.formName}，表單號碼：${this.formId}`, //主旨
-//       Messg: `
-//       請協助進行表單號碼：${this.formId} 簽核作業！
-//       可點選網址查看，https://esys.orange-electronic.com/Eform/List`, //內文 上架更改內容
-//     })
-//     .then((response) => {
-//       console.log("發信", response);
-//       this.runningCount--;
-//     })
-//     .catch((error) => {
-//       console.log("發信-error", error);
-//       this.runningCount--;
-//     });
-// },
-// 成功 彈跳視窗，並轉跳至待簽核表單
-// signSuccess() {
-//   const Swal = require("sweetalert2");
-//   Swal.fire({
-//     title: "成功送出",
-//     confirmButtonColor: "#333",
-//     confirmButtonText: "確認",
-//   }).then((resule) => {
-//     console.log(resule);
-//     if (resule.value) {
-//       // TODO:上線下面這行打開，第2行註解
-//       window.top.location = "https://esys.orange-electronic.com/Eform/List";
-//       // this.$router.push(`${this.formAllData.routeList}`);
-//     }
-//   });
-// },
 </script>
 
 <style lang="scss" scoped>

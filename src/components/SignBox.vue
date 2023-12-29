@@ -36,7 +36,7 @@
             </div>
           </div>
         </div>
-        <button type="button" class="btn btn-black" @click="confirmPassword" :disabled="dataState.disabledBtn">
+        <button type="button" class="btn btn-black" @click="confirmChoice" :disabled="dataState.disabledBtn">
           確認
         </button>
         <button type="button" class="btn btn-red" @click="dataState.showSignBox = 0">
@@ -48,12 +48,17 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { defineAsyncComponent, ref, watch, defineEmits } from 'vue';
 import { resError, Toast, } from '@/utils/base';
 import { Login } from '@/apis/baseAPI.js'
 
 // 引入组件
 const LoadingGIF = defineAsyncComponent(() => import('@/components/LoadingGIF.vue'));
+// 引入store
+import { signStore } from '@/stores/signStore'
+const signStoreConfig = signStore()
+const { signStoreData } = storeToRefs(signStoreConfig)
 // 傳至父件
 const emit = defineEmits(['handle-show-sign-box', 'submit-sign'])
 
@@ -87,31 +92,50 @@ watch(() => dataState.value.showSignBox, (newValue) => {
   console.log("watch", newValue)
   emit("handle-show-sign-box", dataState.value.showSignBox);
 })
-
-// 驗證 密碼
-async function confirmPassword() {
+// 驗證欄位
+function confirmChoice() {
   dataState.value.disabledBtn = true
   if (dataState.value.signModalData.password) {
-    await Login({
-      acc: "222010", //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 signStoreData.value.signer.SIGNER
-      Pwd: dataState.value.signModalData.password, //密碼
-    })
-      .then((response: any) => {
-        if (response.data === "密碼通過") {
-          emit('submit-sign', dataState.value.signModalData)
-        }
-      })
-      .catch((error: any) => {
-        dataState.value.disabledBtn = false
-        console.log(error)
-        resError("密碼錯誤")
-      })
+    if (dataState.value.signModalData.radio === 1) {
+      confirmPassword()
+    } else if (dataState.value.signModalData.radio === 2 && dataState.value.signModalData.opinion !== "") {
+      confirmPassword()
+    } else {
+      dataState.value.disabledBtn = false
+      Toast.fire({
+        icon: "warning",
+        title: "若不同意請填寫意見",
+      });
+    }
   } else {
+    dataState.value.disabledBtn = false
     Toast.fire({
       icon: "warning",
       title: "請填寫密碼！",
     });
   }
+}
+
+// 驗證 密碼
+async function confirmPassword() {
+  dataState.value.runningCount++;
+  await Login({
+    acc: "222010", //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 signStoreData.value.signer.SIGNER
+    Pwd: dataState.value.signModalData.password, //密碼
+  })
+    .then((response: any) => {
+      if (response.data === "密碼通過") {
+        emit('submit-sign', dataState.value.signModalData)
+        dataState.value.runningCount--;
+      }
+    })
+    .catch((error: any) => {
+      dataState.value.disabledBtn = false
+      dataState.value.runningCount--;
+      console.log(error)
+      resError("密碼錯誤")
+    })
+
 }
 
 // 點黑底，取消modal

@@ -4,7 +4,7 @@
     <p class="title">軟體申請單</p>
     <div class="list-form">
       <!-- 按鈕 -->
-      <RouterLink class="action" to="/cloudSoft/create">
+      <RouterLink class="action" to="/soft/create">
         <div class="top-btn">
           <img src="@/assets/white/電子表單icon_建立表單.png" alt="" class="icon" />
           建立表單
@@ -101,7 +101,7 @@ import { type AxiosResponse } from 'axios';
 import { defineAsyncComponent, onMounted, ref, watch, } from 'vue';
 import { useRoute, useRouter, RouterLink } from "vue-router"
 import { storeToRefs } from 'pinia';
-import { resError, Toast } from '@/utils/base';
+import { resError, Toast, addDay } from '@/utils/base';
 import { GetEmpGroup } from '@/apis/baseAPI.js'
 import { GetRDDList } from '@/apis/getListAPI'
 // 引入baseStore
@@ -117,7 +117,7 @@ console.log("網址", url);
 
 // TODO:本地測試用 => 設定 路由query的方法，上線要註解
 const route = useRoute();
-route.query.Empid = "218011"
+route.query.Empid = "222010"
 const userId = route.query.Empid
 
 // TODO:上線用 => 設定 路由query的方法，上線要打開
@@ -162,10 +162,10 @@ const dataState = ref({
   searchLimit: "",
   // 會變動的資料
   formAllData: {
-    routeCreate: "cloudSoft-create",
-    routeSign: "cloudSoft-sign",
-    signPath: "/cloudSoft/sign/",
-    createPath: "/cloudSoft/create/",
+    routeCreate: "soft-create",
+    routeSign: "soft-sign",
+    signPath: "/soft/sign/",
+    createPath: "/soft/create/",
     searchFormsAPI: "GetRDDList",
     id: "RDDID",
   },
@@ -218,6 +218,11 @@ async function changePersons(DeptId: string) {
 }
 // 查詢表單
 async function searchFormList() {
+  let newDate = "" as any
+  if (dataState.value.endDate) {
+    newDate = addDay(dataState.value.endDate)
+  }
+
   dataState.value.runningCount++;
   await GetRDDList(
     {
@@ -226,8 +231,8 @@ async function searchFormList() {
       Coid: "", //公司代號
       DeptId: dataState.value.branchValue, //部門代號
       Startdt: dataState.value.startDate, //開始請假日期
-      Enddt: dataState.value.endDate, //結束
-      Createid: dataState.value.searchLimit,//原本填this.personValue
+      Enddt: newDate.toString(), //原本填結束dataState.value.endDate
+      Createid: dataState.value.searchLimit,//原本填dataState.value.personValue
       type: "0",
     }
   ).then((response: AxiosResponse<ResRDDList[]>) => {

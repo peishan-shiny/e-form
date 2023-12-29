@@ -5,23 +5,23 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: { name: 'cloudSoft' }
+      redirect: { name: 'soft' }
     },
     // 雲端軟體申請單
     {
-      path: '/cloudSoft',
-      name: 'cloudSoft',
-      component: () => import('@/views/cloud-software/cloudSoftList.vue')
+      path: '/soft',
+      name: 'soft',
+      component: () => import('@/views/cloud-software/softList.vue')
     },
     {
-      path: '/cloudSoft/create',
-      name: 'cloudSoft-create',
-      component: () => import('@/views/cloud-software/cloudSoftCreate.vue')
+      path: '/soft/create',
+      name: 'soft-create',
+      component: () => import('@/views/cloud-software/softCreate.vue')
     },
     {
-      path: '/cloudSoft/sign/:formId/:userId',
-      name: 'cloudSoft-sign',
-      component: () => import('@/views/cloud-software/cloudSoftSign.vue')
+      path: '/soft/sign/:formId/:userId',
+      name: 'soft-sign',
+      component: () => import('@/views/cloud-software/softSign.vue')
     }
   ]
 })

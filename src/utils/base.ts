@@ -1,7 +1,7 @@
 import Swal from 'sweetalert2'
 import { storeToRefs } from 'pinia';
 // 引入API
-import { UploadSignFormData, MailSend } from '@/apis/baseAPI.js'
+import { UploadSignFormData, MailSend, SignStepupdate, CountersignAdd } from '@/apis/baseAPI.js'
 import * as addFormAPI from '@/apis/addFormAPI.js'
 // 引入store
 import { baseStore } from '@/stores/baseStore'
@@ -58,6 +58,17 @@ export function createDate() {
   const m = date.getMonth() + 1;
   const d = date.getDate();
   return y + "/" + m + "/" + d;
+}
+
+// 搜尋日期時 => 將日期+1
+export function addDay(day: string) {
+  let newDay = new Date(day)
+  newDay = new Date(newDay.setDate(newDay.getDate() + 1))
+  const y = newDay.getFullYear();
+  const m = newDay.getMonth() + 1;
+  const d = newDay.getDate();
+  console.log("utils", y + "-" + m + "-" + d)
+  return y + "-" + m + "-" + d;
 }
 
 // 下載功能，拿取表單的附件
@@ -127,7 +138,17 @@ export async function returnSignStatus(dataState: any) {
   });
 }
 
-// 接發信api 通知建表人員(完簽或退簽)
+// 更新簽核狀態 - 作廢
+export async function voidSignStatus(dataState: any) {
+  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.voidSign).then(async (response: any) => {
+    console.log("更新簽核狀態-作廢", response);
+
+  }).catch((error: any) => {
+    console.log("更新簽核狀態-作廢-error", error);
+  });
+}
+
+// 接發信api 通知建表人員(完簽/退簽/作廢)
 export async function noticeSendMail(dataState: any, status: string) {
   await MailSend({
     Empid: dataState.formContent.Empid, //TODO:工號，先代自己工號，上架改成 建表人員 dataState.formContent.Empid
@@ -139,25 +160,105 @@ export async function noticeSendMail(dataState: any, status: string) {
     // https://esys.orange-electronic.com/RDDocument/Index?id=${props.formAllData.formCodeName}&formN=index
   })
     .then((response: any) => {
-      console.log("通知完簽/退簽-發信", response);
+      console.log("通知完簽/退簽/作廢-發信", response);
     })
     .catch((error: any) => {
-      console.log("發信-error", error);
+      console.log("通知完簽/退簽/作廢-發信-error", error);
     });
 }
 
 // 若有確認單 需清除 連結的申請單單號
 export async function cleanFormId(dataState: any) {
   await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.clearId).then(async (response: any) => {
-    console.log("退簽清除", response);
+    console.log("清除連結的單號", response);
 
   }).catch((error: any) => {
-    console.log("更新簽核狀態-退簽-error", error);
+    console.log("清除連結的單號-error", error);
   });
+}
+
+// 更新簽核人員簽核，判斷簽核順序 > 0 且 簽核結果為0者，作廢人員SIGNRESULT代4
+export async function updateSignPerson2(dataState: any) {
+  for (let i = 0; i < signStoreData.value.allSign.length; i++) {
+    if (
+      Number(signStoreData.value.allSign[i].SIGNORDER) > 0 &&
+      Number(signStoreData.value.allSign[i].SIGNRESULT) === 0 && signStoreData.value.allSign[i].SignGroup === "作廢"
+    ) {
+      console.log("作廢人有進", i);
+
+      await SignStepupdate({
+        FORMNO: dataState.formId, //表單單號
+        SIGNORDER: signStoreData.value.allSign[i].SIGNORDER, //簽核順序
+        STEPNAME: signStoreData.value.allSign[i].STEPNAME, //簽核職稱
+        SIGNER: signStoreData.value.allSign[i].SIGNER, //簽核人員代號
+        SIGNERNAME: signStoreData.value.allSign[i].SIGNERNAME, //簽核人員名稱
+        ACTUALNAME: signStoreData.value.allSign[i].ACTUALNAME, //實際簽核人員名稱(EX: 假如財務請假，就會請財務代理人簽核
+        ACTUALSIGNER: signStoreData.value.allSign[i].ACTUALSIGNER, //實際簽核人員代號 是否簽核 未簽核回傳: ""
+        SIGNRESULT: 4, //簽核結果 1: 同意, 0: 未簽核, 3: 退簽 , 4: 作廢
+        OPINION: dataState.signModalData.opinion, //簽核意見
+        SIGNTIME: "", //簽核時間
+        ALLOWCUSTOM: signStoreData.value.allSign[i].ALLOWCUSTOM, //是否自訂簽核
+        SignGroup: signStoreData.value.allSign[i].SignGroup, //簽核群組
+        ISEnable: signStoreData.value.allSign[i].ISEnable, //是否顯示
+        types: 1, //1修改
+        ExceId: dataState.formContent.CreateId
+          ? dataState.formContent.CreateId
+          : dataState.formContent.Empid, //建立人
+        Status: "",
+      })
+        .then((response: any) => {
+          console.log("更新簽核人員-作廢", response);
+
+        })
+        .catch((error: any) => {
+          console.log("更新簽核人員-作廢-error", error);
+        });
+    }
+  }
+}
+
+// 更新簽核人員簽核，判斷簽核順序 > 0 且 簽核結果為0者，非作廢人員SIGNRESULT代5
+export async function updateSignPerson(dataState: any) {
+  for (let i = 0; i < signStoreData.value.allSign.length; i++) {
+    if (
+      Number(signStoreData.value.allSign[i].SIGNORDER) > 0 &&
+      Number(signStoreData.value.allSign[i].SIGNRESULT) === 0 && signStoreData.value.allSign[i].SignGroup !== "作廢"
+    ) {
+      console.log("一般人有進", i);
+      await SignStepupdate({
+        FORMNO: dataState.formId, //表單單號
+        SIGNORDER: signStoreData.value.allSign[i].SIGNORDER, //簽核順序
+        STEPNAME: signStoreData.value.allSign[i].STEPNAME, //簽核職稱
+        SIGNER: signStoreData.value.allSign[i].SIGNER, //簽核人員代號
+        SIGNERNAME: signStoreData.value.allSign[i].SIGNERNAME, //簽核人員名稱
+        ACTUALNAME: signStoreData.value.allSign[i].ACTUALNAME, //實際簽核人員名稱(EX: 假如財務請假，就會請財務代理人簽核
+        ACTUALSIGNER: signStoreData.value.allSign[i].ACTUALSIGNER, //實際簽核人員代號 是否簽核 未簽核回傳: ""
+        SIGNRESULT: 5, //簽核結果 1: 同意, 0: 未簽核, 3: 退簽 , 4: 作廢
+        OPINION: "", //簽核意見
+        SIGNTIME: "", //簽核時間
+        ALLOWCUSTOM: signStoreData.value.allSign[i].ALLOWCUSTOM, //是否自訂簽核
+        SignGroup: signStoreData.value.allSign[i].SignGroup, //簽核群組
+        ISEnable: signStoreData.value.allSign[i].ISEnable, //是否顯示
+        types: 1, //1修改
+        ExceId: dataState.formContent.CreateId
+          ? dataState.formContent.CreateId
+          : dataState.formContent.Empid, //建立人
+        Status: "",
+      })
+        .then((response: any) => {
+          console.log("更新簽核人員-作廢", response);
+
+        })
+        .catch((error: any) => {
+          console.log("更新簽核人員-作廢-error", error);
+        });
+    }
+  }
 }
 
 // 成功 彈跳視窗，並轉跳至待簽核表單
 export function signSuccess() {
+  console.log(createStoreData.value.nextSigner)
   Swal.fire({
     title: "成功送出",
     text: `下一個簽核人員：${Object.keys(createStoreData.value.nextSigner).length === 0 ? '無' : createStoreData.value.nextSigner?.SIGNERNAME}`,
@@ -171,5 +272,16 @@ export function signSuccess() {
       // this.$router.push(`${props.formAllData.routeList}`);
     }
   });
+}
+
+// 用會簽方式 + 簽核人員
+export async function addSignCounter(data: any) {
+  await CountersignAdd([data])
+    .then(async (response: any) => {
+      console.log("新增會簽人員", response);
+    })
+    .catch((error: any) => {
+      console.log("新增會簽人員-error", error);
+    });
 }
 

@@ -11,6 +11,23 @@
         <el-form :model="dataState.ruleForm" :rules="dataState.rules" ref="ruleFormDOM" label-width="170px"
           class="demo-ruleForm">
           <div class="area-row">
+            <el-col :span="24">
+              <el-form-item label="請選擇研發PA：" prop="RDPAEmpid">
+                <el-select v-model="dataState.ruleForm.RDPADept" @change="changePersons(dataState.ruleForm.RDPADept)"
+                  placeholder="部門" no-data-text="無數據">
+                  <el-option v-for="item in baseStoreData.branchs" :key="item.DeptId" :label="item.DeptName"
+                    :value="item.DeptId">
+                  </el-option>
+                </el-select>
+                <el-select v-model="dataState.ruleForm.RDPAEmpid" class="ml-1" placeholder="人員">
+                  <el-option v-for="item in dataState.ruleForm.personOptions" :key="item.EmpId" :label="item.EmpName"
+                    :value="item.EmpId">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </div>
+          <div class="area-row">
             <el-col :span="12">
               <el-form-item label="申請單位：" prop="applyDept">
                 <el-select v-model="dataState.ruleForm.applyDept" placeholder="請選擇" :popper-append-to-body="false">
@@ -141,11 +158,11 @@
             <el-col :span="24">
               <el-form-item label="選擇修改文件：">
                 <el-checkbox-group v-model="dataState.ruleForm.choiceDoc">
-                  <el-checkbox label="品質手冊"></el-checkbox>
-                  <el-checkbox label="程序"></el-checkbox>
-                  <el-checkbox label="作業標準書"></el-checkbox>
-                  <el-checkbox label="表格"></el-checkbox>
-                  <el-checkbox label="其他"></el-checkbox>
+                  <el-checkbox label="品質手冊" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
+                  <el-checkbox label="程序" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
+                  <el-checkbox label="作業標準書" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
+                  <el-checkbox label="表格" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
+                  <el-checkbox label="其他" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
                 </el-checkbox-group>
               </el-form-item>
             </el-col>
@@ -165,7 +182,7 @@ import { type AxiosResponse } from 'axios';
 import Swal from 'sweetalert2'
 import { defineAsyncComponent, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { resError, pushWaitSignPage } from '@/utils/base';
+import { resError, pushWaitSignPage, addSignCounter } from '@/utils/base';
 import { RDDAdd } from '@/apis/addFormAPI.js';
 import { UploadFormData, GetElno } from '@/apis/baseAPI.js';
 // 引入组件
@@ -185,6 +202,7 @@ const { baseStoreData } = storeToRefs(baseStoreConfig);
 baseStoreData.value.file = []
 
 const createStoreConfig = createStore()
+const { createStoreData } = storeToRefs(createStoreConfig)
 
 const ruleFormDOM = ref(null)
 const dataState = ref({
@@ -193,6 +211,10 @@ const dataState = ref({
   // 計數api有幾個在執行
   runningCount: 0,
   ruleForm: {
+    // RDPA
+    RDPADept: "",
+    RDPAEmpid: "",
+    personOptions: [] as ResUserInfo[],
     // 申請單位
     applyDept: "",
     applyDeptOptions: [
@@ -277,6 +299,9 @@ const dataState = ref({
     choiceDoc: [],
   },
   rules: {
+    RDPAEmpid: [
+      { required: true, message: "請選擇簽核時的研發PA", trigger: "change" },
+    ],
     applyDept: [
       { required: true, message: "請選擇申請單位", trigger: "change" },
     ],
@@ -323,6 +348,13 @@ watch(() => dataState.value.runningCount, (newValue) => {
     dataState.value.isLoading = false;
   }
 })
+
+// 當部門資料改變 過濾人員資料
+async function changePersons(DeptId: string) {
+  dataState.value.ruleForm.RDPAEmpid = ""
+  dataState.value.ruleForm.personOptions = baseStoreData.value.allPersons.filter(item => item.DeptId === DeptId)
+}
+
 function verifyForm() {
   (ruleFormDOM.value as any).validate((valid: boolean) => {
     if (valid) {
@@ -402,8 +434,19 @@ async function verifyContent() {
         formId: formId,
         formName: "軟體申請單",
       };
-      console.log("取第一個簽核人");
+
+      // 這邊要插入研發PA => 用會簽方式自加入 
+      await addSignCounter({
+        SIGNER: dataState.value.ruleForm.RDPAEmpid,
+        FORMNO: dataState.value.formId,
+        SIGNORDER: "1",
+        STEPNAME: "研發PA",
+        SignGroup: "簽核"
+      })
+
+      // 取下一個簽核人
       await createStoreConfig.fetchNextSigner(inputData)
+
       console.log("發信前");
       await createStoreConfig.sendMail(inputData)
       console.log("結束");
