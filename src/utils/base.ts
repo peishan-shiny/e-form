@@ -100,7 +100,7 @@ export async function uploadFile(dataState: any) {
       return true;
     })
     .catch((error: any) => {
-      console.log("簽核附件上傳後端error", error);
+      console.log("簽核附件上傳後端-error", error);
       Toast.fire({
         icon: "error",
         title: "附件上傳失敗請再試一次或聯絡IT人員",
@@ -120,7 +120,7 @@ export async function uploadFile(dataState: any) {
 
 // 更新簽核狀態 - 完簽
 export async function finishSignStatus(dataState: any) {
-  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.finishSign).then(async (response: any) => {
+  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.finishSign).then((response: any) => {
     console.log("更新簽核狀態-完簽", response);
 
   }).catch((error: any) => {
@@ -130,7 +130,7 @@ export async function finishSignStatus(dataState: any) {
 
 // 更新簽核狀態 - 退簽
 export async function returnSignStatus(dataState: any) {
-  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.returnSign).then(async (response: any) => {
+  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.returnSign).then((response: any) => {
     console.log("更新簽核狀態-退簽", response);
 
   }).catch((error: any) => {
@@ -140,7 +140,7 @@ export async function returnSignStatus(dataState: any) {
 
 // 更新簽核狀態 - 作廢
 export async function voidSignStatus(dataState: any) {
-  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.voidSign).then(async (response: any) => {
+  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.voidSign).then((response: any) => {
     console.log("更新簽核狀態-作廢", response);
 
   }).catch((error: any) => {
@@ -169,7 +169,7 @@ export async function noticeSendMail(dataState: any, status: string) {
 
 // 若有確認單 需清除 連結的申請單單號
 export async function cleanFormId(dataState: any) {
-  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.clearId).then(async (response: any) => {
+  await addFormAPI[dataState.formAllData.updateFormsAPI](dataState.formAllData.clearId).then((response: any) => {
     console.log("清除連結的單號", response);
 
   }).catch((error: any) => {
@@ -277,7 +277,7 @@ export function signSuccess() {
 // 用會簽方式 + 簽核人員
 export async function addSignCounter(data: any) {
   await CountersignAdd([data])
-    .then(async (response: any) => {
+    .then((response: any) => {
       console.log("新增會簽人員", response);
     })
     .catch((error: any) => {

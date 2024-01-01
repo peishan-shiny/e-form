@@ -1,6 +1,6 @@
 @import './reset.css';
 @import './base.css';
 @import './listForm.scss';
-@import 'loadingGIF.scss';
-@import 'createForm.scss';
-@import 'signForm.scss';
+@import './loadingGIF.scss';
+@import './createForm.scss';
+@import './signForm.scss';
