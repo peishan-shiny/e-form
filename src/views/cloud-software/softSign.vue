@@ -106,7 +106,7 @@
             <td class="table-15">申請人</td>
             <td class="table-15">{{ dataState.formContent.EmpName }}</td>
             <td class="table-15">主管</td>
-            <!-- <td class="table-15">{{ director.SIGNERNAME }}</td> -->
+            <td class="table-15">{{ dataState.formContent.director?.SIGNERNAME }}</td>
           </tr>
           <tr>
             <td class="table-10" colspan="2">程式版號</td>
@@ -149,7 +149,7 @@
               <el-radio v-model="dataState.formContent.reviseDoc" label="是">是</el-radio>
               <el-radio v-model="dataState.formContent.reviseDoc" label="否">否</el-radio>
               需修改
-              <el-checkbox-group v-model="dataState.formContent.choiceDoc">
+              <el-checkbox-group v-model="dataState.formContent.choiceDocArr">
                 <el-checkbox label="品質手冊"></el-checkbox>
                 <el-checkbox label="程序"></el-checkbox>
                 <el-checkbox label="作業標準書"></el-checkbox>
@@ -194,7 +194,7 @@
 
 <script setup lang="ts">
 import { type AxiosResponse } from 'axios';
-import { defineAsyncComponent, onMounted, ref, watch, computed } from 'vue';
+import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
 import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
 import { resError, uploadFile, signSuccess, finishSignStatus, noticeSendMail, returnSignStatus, voidSignStatus, pushWaitSignPage, updateSignPerson2, updateSignPerson } from '@/utils/base';
@@ -309,11 +309,6 @@ onMounted(() => {
   fetchFormContent(dataState.value.formId);
 })
 
-const director = computed(() => {
-  return signStoreData.value.signStep.find(item => item.STEPNAME === '一階主管')
-})
-console.log("director", director)
-
 // 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
 watch(() => dataState.value.runningCount, (newValue) => {
   console.log("watch", newValue)
@@ -358,13 +353,17 @@ async function fetchFormContent(formId: string | string[]) {
   })
     .then(async (response: AxiosResponse<ResRDDList[]>) => {
       console.log("表單內容", response.data[0]);
-
-      dataState.value.formContent = response.data[0];
-
+      response.data[0].choiceDocArr = response.data[0].choiceDoc?.split(',')
+      
       // 取簽核人員
       await signStoreConfig.fetchSigner(inputData)
       // 取簽核順序
       await signStoreConfig.fetchSignStep(inputData)
+
+      response.data[0].director = signStoreData.value.signStep.find(item => item.STEPNAME === '一階主管')
+
+      dataState.value.formContent = response.data[0];
+
       // 取簽核人上傳附件
       // await signStoreConfig.fetchGetSignWFP(inputData);
 

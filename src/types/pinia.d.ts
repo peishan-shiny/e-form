@@ -158,6 +158,7 @@ interface ResRDDList {
   applyType: string,
   bomElno?: string,
   choiceDoc?: string,
+  choiceDocArr?: string[],
   modelNO?: string,
   programName: string,
   programV: string,
@@ -171,6 +172,7 @@ interface ResRDDList {
   STNAME?: string,
   SIGNER?: string,
   NextSIGNER?: string,
+  director?:ResSigner
 }
 
 // 會簽用 
