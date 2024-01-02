@@ -104,7 +104,7 @@
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="四階料號：">
+              <el-form-item label="台灣四階料號：">
                 <el-input v-model="dataState.ruleForm.bomElno"
                   @change="fetchModelNO(dataState.ruleForm.bomElno, 'bomElno')"></el-input>
               </el-form-item>
@@ -112,7 +112,7 @@
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="Model NO：">
+              <el-form-item label="台灣Model NO：">
                 <el-input v-model="dataState.ruleForm.modelNO" disabled></el-input>
               </el-form-item>
             </el-col>
@@ -134,35 +134,35 @@
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="修改前內容：">
+              <el-form-item label="修改前內容：" prop="reviseB">
                 <el-input type="textarea" :autosize="{ minRows: 1 }" v-model="dataState.ruleForm.reviseB"></el-input>
               </el-form-item>
             </el-col>
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="修改後內容：">
+              <el-form-item label="修改後內容：" prop="reviseA">
                 <el-input type="textarea" :autosize="{ minRows: 1 }" v-model="dataState.ruleForm.reviseA"></el-input>
               </el-form-item>
             </el-col>
           </div>
           <div class="area-row">
             <el-col :span="24">
-              <el-form-item label="相關文件是否修改：">
+              <el-form-item label="相關文件是否修改：" prop="reviseDoc">
                 <el-radio v-model="dataState.ruleForm.reviseDoc" label="是">是</el-radio>
                 <el-radio v-model="dataState.ruleForm.reviseDoc" label="否">否</el-radio>
               </el-form-item>
             </el-col>
           </div>
-          <div class="area-row">
+          <div class="area-row" v-if="dataState.ruleForm.reviseDoc === '是'">
             <el-col :span="24">
-              <el-form-item label="選擇修改文件：">
+              <el-form-item label="選擇修改文件：" prop="choiceDoc">
                 <el-checkbox-group v-model="dataState.ruleForm.choiceDoc">
-                  <el-checkbox label="品質手冊" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
-                  <el-checkbox label="程序" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
-                  <el-checkbox label="作業標準書" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
-                  <el-checkbox label="表格" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
-                  <el-checkbox label="其他" :disabled="dataState.ruleForm.reviseDoc === '否'"></el-checkbox>
+                  <el-checkbox label="品質手冊"></el-checkbox>
+                  <el-checkbox label="程序"></el-checkbox>
+                  <el-checkbox label="作業標準書"></el-checkbox>
+                  <el-checkbox label="表格"></el-checkbox>
+                  <el-checkbox label="其他"></el-checkbox>
                 </el-checkbox-group>
               </el-form-item>
             </el-col>
@@ -335,6 +335,18 @@ const dataState = ref({
     // suzobomElno: [
     //   { required: true, message: "請填寫蘇州四階料號", trigger: "change" },
     // ],
+    reviseB: [
+      { required: true, message: "請填寫修改前內容", trigger: "change" },
+    ],
+    reviseA: [
+      { required: true, message: "請填寫修改後內容", trigger: "change" },
+    ],
+    reviseDoc: [
+      { required: true, message: "請選擇相關文件是否修改", trigger: "change" },
+    ],
+    choiceDoc: [
+      { type: 'array', required: true, message: "請選擇申請類別", trigger: "change" },
+    ]
   },
   // 上傳成功將單號存起來
   formId: "",

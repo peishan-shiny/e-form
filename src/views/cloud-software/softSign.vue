@@ -44,10 +44,10 @@
           <div class="area-title-50">申請類別：{{ dataState.formContent.applyType }}</div>
         </div>
         <div class="area-row">
-          <div class="area-title">四階料號：{{ dataState.formContent.bomElno }}</div>
+          <div class="area-title">台灣四階料號：{{ dataState.formContent.bomElno }}</div>
         </div>
         <div class="area-row">
-          <div class="area-title">Model NO：{{ dataState.formContent.modelNO }}</div>
+          <div class="area-title">台灣Model NO：{{ dataState.formContent.modelNO }}</div>
         </div>
         <div class="area-row">
           <div class="area-title">蘇州四階料號：{{ dataState.formContent.suzobomElno }}</div>
@@ -71,60 +71,130 @@
 
       <!-- 附加文件 -->
       <FileCom :model="dataState.model" :toFileCom="dataState.toFileCom" />
-
+      <p class="version">QP-038-07-H</p>
       <!-- 簽核人員順序 -->
-      <SignForm class="mt-1 noPrint" />
+      <SignForm class="mt-1" />
     </div>
 
     <!-- 列印區 -->
-    <!-- <div class="print-area">
-      <div class="print-header">
-        <img src="@/assets/logo.png" class="logo" />
-        <div class="print-title-wrapper">
-          <p class="print-title">
-            <span class="color-orange">O</span>range Electronic Co.,Ltd
-          </p>
-          <p class="print-title">初期製造流程圖</p>
-        </div>
-      </div>
-      <p class="date">
-        Date：<span class="bottom-line">{{ formContent.date }}</span><span class="date">版次：</span><span
-          class="bottom-line">{{ formContent.VERSION }}</span>
-      </p>
-
-      <div class="print-form">
-        <div class="form-row">
-          <div class="form-title-center">
-            專案名稱： <span>{{ formContent.ProName }}</span>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-title-center">
-            <span>{{ formContent.FILENAME }}</span>
-          </div>
-        </div>
+    <div class="print-area">
+      <div class="print-block">
+        <p class="print-title">橙的電子股份有限公司</p>
+        <p class="print-subtitle">軟體申請單</p>
       </div>
 
       <div class="print-form">
-        <div class="form-row">
-          <div class="form-33">核准</div>
-          <div class="form-33">審核</div>
-          <div class="form-33">製表</div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-33" v-for="item in printSign" :key="item.SIGNORDER">
-            <img class="signPicture" :src="signPicture + item.SIGNER + '.png'" alt="" v-if="item.SIGNRESULT === 1" />
-          </div>
-        </div>
+        <table class="print-table">
+          <tr v-show="false">
+            <th class="table-10"></th>
+            <th class="table-15"></th>
+            <th class="table-15"></th>
+            <th class="table-15"></th>
+            <th class="table-15"></th>
+            <th class="table-15"></th>
+            <th class="table-15"></th>
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">申請原因</td>
+            <td class="table-15" colspan="3">{{ dataState.formContent.applyReason }}</td>
+            <td class="table-15">日期</td>
+            <td class="table-15">{{ dataState.formContent.CreateDate }}</td>
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">申請單位</td>
+            <td class="table-15">{{ dataState.formContent.applyDept }}</td>
+            <td class="table-15">申請人</td>
+            <td class="table-15">{{ dataState.formContent.EmpName }}</td>
+            <td class="table-15">主管</td>
+            <!-- <td class="table-15">{{ director.SIGNERNAME }}</td> -->
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">程式版號</td>
+            <td class="table-15">{{ dataState.formContent.programV }}</td>
+            <td class="table-15">程式名稱</td>
+            <td class="table-15" colspan="3">{{ dataState.formContent.programName }}</td>
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">SVN版號</td>
+            <td class="table-15">{{ dataState.formContent.SVNV }}</td>
+            <td class="table-15">適用機種</td>
+            <td class="table-15" colspan="3">{{ dataState.formContent.Model }}</td>
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">台灣四階料號</td>
+            <td class="table-15">{{ dataState.formContent.bomElno }}</td>
+            <td class="table-15">Model NO</td>
+            <td class="table-15">{{ dataState.formContent.modelNO }}</td>
+            <td class="table-15" rowspan="2">IC：{{ dataState.formContent.IC }}</td>
+            <td class="table-15" rowspan="2">{{ dataState.formContent.applyType }}</td>
+          </tr>
+          <tr>
+            <td class="table-10" colspan="2">蘇州四階料號</td>
+            <td class="table-15">{{ dataState.formContent.suzobomElno }}</td>
+            <td class="table-15">Model NO</td>
+            <td class="table-15">{{ dataState.formContent.suzomodelNO }}</td>
+          </tr>
+          <tr>
+            <td class="table-10" rowspan="2">內容簡述</td>
+            <td class="table-15">修改前內容</td>
+            <td class="table-15" colspan="5">{{ dataState.formContent.reviseB }}</td>
+          </tr>
+          <tr>
+            <td class="table-15">修改後內容</td>
+            <td class="table-15" colspan="5">{{ dataState.formContent.reviseA }}</td>
+          </tr>
+          <tr>
+            <td class="table-15" colspan="2">相關文件</td>
+            <td class="table-15" colspan="5">
+              <el-radio v-model="dataState.formContent.reviseDoc" label="是">是</el-radio>
+              <el-radio v-model="dataState.formContent.reviseDoc" label="否">否</el-radio>
+              需修改
+              <el-checkbox-group v-model="dataState.formContent.choiceDoc">
+                <el-checkbox label="品質手冊"></el-checkbox>
+                <el-checkbox label="程序"></el-checkbox>
+                <el-checkbox label="作業標準書"></el-checkbox>
+                <el-checkbox label="表格"></el-checkbox>
+                <el-checkbox label="其他"></el-checkbox>
+              </el-checkbox-group>
+            </td>
+          </tr>
+        </table>
       </div>
-    </div> -->
+
+      <div class="print-form">
+        <table class="print-table">
+          <tr>
+            <th colspan="3">簽核人員</th>
+          </tr>
+          <tr v-for="item in signStoreData.signStep" :key="item.SIGNORDER">
+            <td class="table-25">{{ item.STEPNAME }}</td>
+            <td class="table-25">
+              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="">
+            </td>
+            <td class="table-50"> {{ item.OPINION }}</td>
+          </tr>
+        </table>
+        <table class="print-table">
+          <tr>
+            <th colspan="3">會辦人員</th>
+          </tr>
+          <tr v-for="item in signStoreData.executorStep" :key="item.SIGNORDER">
+            <td class="table-25">{{ item.STEPNAME }}</td>
+            <td class="table-25">
+              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="">
+            </td>
+            <td class="table-50" colspan="5"> {{ item.OPINION }}</td>
+          </tr>
+        </table>
+        <p class="version">QP-038-07-H</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { type AxiosResponse } from 'axios';
-import { defineAsyncComponent, onMounted, ref, watch } from 'vue';
+import { defineAsyncComponent, onMounted, ref, watch, computed } from 'vue';
 import { useRoute } from "vue-router"
 import { storeToRefs } from 'pinia';
 import { resError, uploadFile, signSuccess, finishSignStatus, noticeSendMail, returnSignStatus, voidSignStatus, pushWaitSignPage, updateSignPerson2, updateSignPerson } from '@/utils/base';
@@ -238,6 +308,11 @@ onMounted(() => {
   // 取得表單內容
   fetchFormContent(dataState.value.formId);
 })
+
+const director = computed(() => {
+  return signStoreData.value.signStep.find(item => item.STEPNAME === '一階主管')
+})
+console.log("director", director)
 
 // 監聽計數，看裡面是否還有api再執行，若沒有將this.isLoading 改 false;
 watch(() => dataState.value.runningCount, (newValue) => {

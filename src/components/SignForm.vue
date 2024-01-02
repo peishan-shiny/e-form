@@ -85,7 +85,7 @@
           }}</label>
         </td>
         <td class="time-value">
-          <span v-if="!(item.SIGNRESULT === 5)">{{ item.SIGNTIME }}</span>
+          <span v-if="!(item.SIGNRESULT === 5)">{{ item.SIGNTIME?.split('T')[0] }}</span>
         </td>
         <td class="suggestion-value">
           {{ !item.OPINION ? " " : item.OPINION }}
@@ -115,15 +115,6 @@ const { signStoreData } = storeToRefs(signStoreConfig)
 const dataState = ref({
   signPicture: "https://esys.orange-electronic.com/Image/SignerPicture/",
 })
-// created() { },
-// computed: {
-//   signStep() {
-//     return this.$store.state.sign.signStep;
-//   },
-//   executorStep() {
-//     return this.$store.state.sign.executorStep;
-//   },
-// }
 </script>
 
 <style lang="scss" scoped>
