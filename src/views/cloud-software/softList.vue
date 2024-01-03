@@ -116,14 +116,17 @@ const url = location.href;
 console.log("網址", url);
 
 // TODO:本地測試用 => 設定 路由query的方法，上線要註解
-const route = useRoute();
-route.query.Empid = "222010"
-const userId = route.query.Empid
+// const route = useRoute();
+// route.query.Empid = "218011"
+// const userId = route.query.Empid
 
 // TODO:上線用 => 設定 路由query的方法，上線要打開
-// const { query } = useRoute();
-// console.log(query)
-// const userId = query.Empid
+const { query } = useRoute();
+console.log(query)
+let userId = ""
+if (typeof query.Empid === 'string') {
+  userId = query.Empid
+}
 
 const dataState = ref({
   // 送出表單的等待畫面

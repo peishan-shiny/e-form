@@ -56,10 +56,12 @@
           <div class="area-title">蘇州Model NO：{{ dataState.formContent.suzomodelNO }}</div>
         </div>
         <div class="area-row">
-          <div class="area-title">修改前內容：{{ dataState.formContent.reviseB }}</div>
+          <div class="area-title">修改前內容：</div>
+          <p>{{ dataState.formContent.reviseB }}</p>
         </div>
         <div class="area-row">
-          <div class="area-title">修改後內容：{{ dataState.formContent.reviseA }}</div>
+          <div class="area-title">修改後內容：</div>
+          <p>{{ dataState.formContent.reviseA }}</p>
         </div>
         <div class="area-row">
           <div class="area-title">相關文件是否修改：{{ dataState.formContent.reviseDoc }}</div>
@@ -86,56 +88,56 @@
       <div class="print-form">
         <table class="print-table">
           <tr v-show="false">
-            <th class="table-10"></th>
+            <th class="table-5"></th>
             <th class="table-15"></th>
             <th class="table-15"></th>
             <th class="table-15"></th>
-            <th class="table-15"></th>
+            <th class="table-20"></th>
             <th class="table-15"></th>
             <th class="table-15"></th>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">申請原因</td>
+            <td class="table-5" colspan="2">申請原因</td>
             <td class="table-15" colspan="3">{{ dataState.formContent.applyReason }}</td>
             <td class="table-15">日期</td>
             <td class="table-15">{{ dataState.formContent.CreateDate }}</td>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">申請單位</td>
+            <td class="table-5" colspan="2">申請單位</td>
             <td class="table-15">{{ dataState.formContent.applyDept }}</td>
             <td class="table-15">申請人</td>
-            <td class="table-15">{{ dataState.formContent.EmpName }}</td>
+            <td class="table-20">{{ dataState.formContent.EmpName }}</td>
             <td class="table-15">主管</td>
             <td class="table-15">{{ dataState.formContent.director?.SIGNERNAME }}</td>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">程式版號</td>
+            <td class="table-5" colspan="2">程式版號</td>
             <td class="table-15">{{ dataState.formContent.programV }}</td>
             <td class="table-15">程式名稱</td>
-            <td class="table-15" colspan="3">{{ dataState.formContent.programName }}</td>
+            <td class="table-20" colspan="3">{{ dataState.formContent.programName }}</td>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">SVN版號</td>
+            <td class="table-5" colspan="2">SVN版號</td>
             <td class="table-15">{{ dataState.formContent.SVNV }}</td>
             <td class="table-15">適用機種</td>
-            <td class="table-15" colspan="3">{{ dataState.formContent.Model }}</td>
+            <td class="table-20" colspan="3">{{ dataState.formContent.Model }}</td>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">台灣四階料號</td>
+            <td class="table-5" colspan="2">台灣四階料號</td>
             <td class="table-15">{{ dataState.formContent.bomElno }}</td>
             <td class="table-15">Model NO</td>
-            <td class="table-15">{{ dataState.formContent.modelNO }}</td>
+            <td class="table-20">{{ dataState.formContent.modelNO }}</td>
             <td class="table-15" rowspan="2">IC：{{ dataState.formContent.IC }}</td>
             <td class="table-15" rowspan="2">{{ dataState.formContent.applyType }}</td>
           </tr>
           <tr>
-            <td class="table-10" colspan="2">蘇州四階料號</td>
+            <td class="table-5" colspan="2">蘇州四階料號</td>
             <td class="table-15">{{ dataState.formContent.suzobomElno }}</td>
             <td class="table-15">Model NO</td>
-            <td class="table-15">{{ dataState.formContent.suzomodelNO }}</td>
+            <td class="table-20">{{ dataState.formContent.suzomodelNO }}</td>
           </tr>
           <tr>
-            <td class="table-10" rowspan="2">內容簡述</td>
+            <td class="table-5" rowspan="2">內容簡述</td>
             <td class="table-15">修改前內容</td>
             <td class="table-15" colspan="5">{{ dataState.formContent.reviseB }}</td>
           </tr>
@@ -144,7 +146,7 @@
             <td class="table-15" colspan="5">{{ dataState.formContent.reviseA }}</td>
           </tr>
           <tr>
-            <td class="table-15" colspan="2">相關文件</td>
+            <td class="table-5" colspan="2">相關文件</td>
             <td class="table-15" colspan="5">
               <el-radio v-model="dataState.formContent.reviseDoc" label="是">是</el-radio>
               <el-radio v-model="dataState.formContent.reviseDoc" label="否">否</el-radio>
@@ -169,7 +171,8 @@
           <tr v-for="item in signStoreData.signStep" :key="item.SIGNORDER">
             <td class="table-25">{{ item.STEPNAME }}</td>
             <td class="table-25">
-              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="">
+              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="" style="height: 30px;"
+                v-if="!(item.SIGNRESULT === 5 || item.SIGNRESULT === 0)">
             </td>
             <td class="table-50"> {{ item.OPINION }}</td>
           </tr>
@@ -181,7 +184,8 @@
           <tr v-for="item in signStoreData.executorStep" :key="item.SIGNORDER">
             <td class="table-25">{{ item.STEPNAME }}</td>
             <td class="table-25">
-              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="">
+              <img class="signPicture" :src="dataState.signPicture + item.SIGNER + '.png'" alt="" style="height: 30px;"
+                v-if="!(item.SIGNRESULT === 5 || item.SIGNRESULT === 0)">
             </td>
             <td class="table-50" colspan="5"> {{ item.OPINION }}</td>
           </tr>
@@ -354,7 +358,7 @@ async function fetchFormContent(formId: string | string[]) {
     .then(async (response: AxiosResponse<ResRDDList[]>) => {
       console.log("表單內容", response.data[0]);
       response.data[0].choiceDocArr = response.data[0].choiceDoc?.split(',')
-      
+
       // 取簽核人員
       await signStoreConfig.fetchSigner(inputData)
       // 取簽核順序

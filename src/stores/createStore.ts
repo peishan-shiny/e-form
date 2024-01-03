@@ -24,7 +24,7 @@ export const createStore = defineStore('createStore', {
     // 發信-簽核通知
     async sendMail(inputData: any) {
       await MailSend({
-        Empid: "222010", //TODO:工號，先代自己工號，上線改成下一個簽核人員工號 this.createStoreData.nextSigner.SIGNER
+        Empid: this.createStoreData.nextSigner.SIGNER, //TODO:工號，先代自己工號，上線改成下一個簽核人員工號 this.createStoreData.nextSigner.SIGNER
         Sub: `簽核通知：${inputData.formName}，表單號碼：${inputData.formId}`, //主旨
         Messg: `
           請協助進行表單號碼：${inputData.formId} 簽核作業！

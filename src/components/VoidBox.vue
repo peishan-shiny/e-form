@@ -52,23 +52,23 @@ import { ref, watch, defineEmits } from 'vue';
 import { resError, Toast, } from '@/utils/base';
 import { Login } from '@/apis/baseAPI.js'
 // 引入store
-import {userStore} from '@/stores/userStore';
+import { userStore } from '@/stores/userStore';
 const userStoreConfig = userStore()
-const {userStoreData} = storeToRefs(userStoreConfig)
+const { userStoreData } = storeToRefs(userStoreConfig)
 
 const emit = defineEmits(['handle-show-void-box', 'submit-void'])
 
 const dataState = ref({
-      showVoidBox: 1,
-      // 簽核完成將確認鈕 disabled
-      disabledBtn: false,
-      // 簽核彈跳窗的資料
-      signModalData: {
-        radio:2,
-        password: "",
-        opinion: "",
-      },
-    })
+  showVoidBox: 1,
+  // 簽核完成將確認鈕 disabled
+  disabledBtn: false,
+  // 簽核彈跳窗的資料
+  signModalData: {
+    radio: 2,
+    password: "",
+    opinion: "",
+  },
+})
 
 watch(() => dataState.value.showVoidBox, (newValue) => {
   console.log("watch", newValue)
@@ -76,7 +76,7 @@ watch(() => dataState.value.showVoidBox, (newValue) => {
 })
 
 // 點黑底，取消modal
-function cancelModal(event:any) {
+function cancelModal(event: any) {
   const modal = document.querySelector(".sign-modal");
   if (event.target === modal) {
     dataState.value.showVoidBox = 0;
@@ -88,15 +88,15 @@ async function confirmPassword() {
   dataState.value.disabledBtn = true
   if (dataState.value.signModalData.password && dataState.value.signModalData.opinion && dataState.value.signModalData.radio) {
     await Login({
-        acc: "222010", //TODO:工號，先代自己工號，上架改成"使用者"非簽核人員工號 userStoreData.value.EmpId
-        Pwd: dataState.value.signModalData.password, //密碼
-      })
-      .then((response:any) => {
+      acc: userStoreData.value.EmpId, //TODO:工號，先代自己工號，上架改成"使用者"非簽核人員工號 userStoreData.value.EmpId
+      Pwd: dataState.value.signModalData.password, //密碼
+    })
+      .then((response: any) => {
         if (response.data === "密碼通過") {
           emit('submit-void', dataState.value.signModalData)
         }
       })
-      .catch((error:any) => {
+      .catch((error: any) => {
         dataState.value.disabledBtn = false
         console.log(error)
         resError("密碼錯誤")

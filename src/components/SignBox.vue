@@ -120,7 +120,7 @@ function confirmChoice() {
 async function confirmPassword() {
   dataState.value.runningCount++;
   await Login({
-    acc: "222010", //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 signStoreData.value.signer.SIGNER
+    acc: signStoreData.value.signer.SIGNER, //TODO:工號，先代自己工號，上架改成下一個簽核人員工號 signStoreData.value.signer.SIGNER
     Pwd: dataState.value.signModalData.password, //密碼
   })
     .then((response: any) => {
